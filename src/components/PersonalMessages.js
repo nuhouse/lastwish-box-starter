@@ -1,7 +1,12 @@
 import React, { useEffect, useState, useRef } from "react";
 import { db, storage } from "../firebase";
-import { collection, addDoc, query, where, orderBy, onSnapshot, serverTimestamp, deleteDoc, doc } from "firebase/firestore";
-import { ref, uploadBytesResumable, getDownloadURL, deleteObject } from "firebase/storage";
+import {
+  collection, addDoc, query, where, orderBy,
+  onSnapshot, serverTimestamp, deleteDoc, doc, updateDoc
+} from "firebase/firestore";
+import {
+  ref, uploadBytesResumable, getDownloadURL, deleteObject
+} from "firebase/storage";
 
 function getFileType(file) {
   if (!file) return null;
@@ -15,6 +20,8 @@ export default function PersonalMessages({ user }) {
   const [text, setText] = useState("");
   const [file, setFile] = useState(null);
   const [uploading, setUploading] = useState(false);
+  const [editingId, setEditingId] = useState(null); // <-- NEW
+  const [editingText, setEditingText] = useState(""); // <-- NEW
   const fileInput = useRef();
 
   // Load messages
@@ -30,6 +37,7 @@ export default function PersonalMessages({ user }) {
     return unsub;
   }, [user.uid]);
 
+  // Upload new message
   const handleUpload = async e => {
     e.preventDefault();
     setUploading(true);
@@ -68,6 +76,7 @@ export default function PersonalMessages({ user }) {
     setUploading(false);
   };
 
+  // Delete message
   const handleDelete = async msg => {
     if (window.confirm("Delete this message?")) {
       if (msg.fileUrl && msg.fileName) {
@@ -77,6 +86,29 @@ export default function PersonalMessages({ user }) {
       }
       await deleteDoc(doc(db, "personalMessages", msg.id));
     }
+  };
+
+  // Start editing
+  const handleEdit = (msg) => {
+    setEditingId(msg.id);
+    setEditingText(msg.text);
+  };
+
+  // Save editing
+  const handleSaveEdit = async (msg) => {
+    if (editingText.trim().length < 2) {
+      alert("Message too short.");
+      return;
+    }
+    await updateDoc(doc(db, "personalMessages", msg.id), { text: editingText });
+    setEditingId(null);
+    setEditingText("");
+  };
+
+  // Cancel editing
+  const handleCancelEdit = () => {
+    setEditingId(null);
+    setEditingText("");
   };
 
   return (
@@ -97,7 +129,6 @@ export default function PersonalMessages({ user }) {
           ref={fileInput}
           accept="image/*,video/*,.pdf,.doc,.docx,.xls,.xlsx,.txt"
           onChange={e => setFile(e.target.files[0])}
-          style={{}}
         />
         <button type="submit" disabled={uploading} style={{
           background: "#2a0516",
@@ -122,27 +153,64 @@ export default function PersonalMessages({ user }) {
             background: "#f8f8fa",
             position: "relative"
           }}>
-            <div style={{ marginBottom: 6, whiteSpace: "pre-line" }}>{msg.text}</div>
-            {msg.fileUrl && (
-              msg.fileType === "image" ? (
-                <img src={msg.fileUrl} alt="" style={{ maxWidth: "100%", borderRadius: 8, marginBottom: 4 }} />
-              ) : msg.fileType === "video" ? (
-                <video src={msg.fileUrl} controls style={{ maxWidth: "100%", borderRadius: 8, marginBottom: 4 }} />
-              ) : (
-                <a href={msg.fileUrl} target="_blank" rel="noopener noreferrer" style={{ color: "#f15822", textDecoration: "underline" }}>
-                  Download File
-                </a>
-              )
+            {editingId === msg.id ? (
+              <div>
+                <textarea
+                  value={editingText}
+                  minLength={2}
+                  maxLength={2000}
+                  required
+                  autoFocus
+                  onChange={e => setEditingText(e.target.value)}
+                  style={{
+                    minHeight: 60, width: "100%", resize: "vertical", borderRadius: 5,
+                    padding: 8, border: "1px solid #aaa", marginBottom: 8
+                  }}
+                />
+                <div>
+                  <button onClick={() => handleSaveEdit(msg)} style={{
+                    background: "#2a0516", color: "#fff", border: "none", borderRadius: 4,
+                    padding: "7px 16px", marginRight: 8, fontWeight: 600, cursor: "pointer"
+                  }}>
+                    Save
+                  </button>
+                  <button onClick={handleCancelEdit} style={{
+                    background: "#ccc", color: "#222", border: "none", borderRadius: 4,
+                    padding: "7px 14px", fontWeight: 600, cursor: "pointer"
+                  }}>
+                    Cancel
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <>
+                <div style={{ marginBottom: 6, whiteSpace: "pre-line" }}>{msg.text}</div>
+                {msg.fileUrl && (
+                  msg.fileType === "image" ? (
+                    <img src={msg.fileUrl} alt="" style={{ maxWidth: "100%", borderRadius: 8, marginBottom: 4 }} />
+                  ) : msg.fileType === "video" ? (
+                    <video src={msg.fileUrl} controls style={{ maxWidth: "100%", borderRadius: 8, marginBottom: 4 }} />
+                  ) : (
+                    <a href={msg.fileUrl} target="_blank" rel="noopener noreferrer" style={{ color: "#f15822", textDecoration: "underline" }}>
+                      Download File
+                    </a>
+                  )
+                )}
+                <div style={{ fontSize: "0.95em", color: "#657899", marginTop: 4 }}>
+                  {msg.created && msg.created.toDate
+                    ? msg.created.toDate().toLocaleString()
+                    : ""}
+                </div>
+                <button onClick={() => handleEdit(msg)} style={{
+                  position: "absolute", top: 8, right: 65, background: "#e97c13", color: "#fff",
+                  border: "none", borderRadius: 4, padding: "2px 9px", fontSize: "0.93em", cursor: "pointer"
+                }}>Edit</button>
+                <button onClick={() => handleDelete(msg)} style={{
+                  position: "absolute", top: 8, right: 8, background: "#980000", color: "#fff",
+                  border: "none", borderRadius: 4, padding: "2px 9px", fontSize: "0.93em", cursor: "pointer"
+                }}>Delete</button>
+              </>
             )}
-            <div style={{ fontSize: "0.95em", color: "#657899", marginTop: 4 }}>
-              {msg.created && msg.created.toDate
-                ? msg.created.toDate().toLocaleString()
-                : ""}
-            </div>
-            <button onClick={() => handleDelete(msg)} style={{
-              position: "absolute", top: 8, right: 8, background: "#980000", color: "#fff",
-              border: "none", borderRadius: 4, padding: "2px 9px", fontSize: "0.93em", cursor: "pointer"
-            }}>Delete</button>
           </div>
         ))}
       </div>
