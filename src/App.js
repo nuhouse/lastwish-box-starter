@@ -56,12 +56,12 @@ function App() {
             <Route path="/personal/funeral-planning" element={<Placeholder title="Funeral Planning" />} />
             <Route path="/personal/memory-lane" element={<Placeholder title="Memory Lane" />} />
             <Route path="/personal/belongings" element={<Placeholder title="Belongings" />} />
-            {/* Proof of Life & Contacts */}
+            {/* Proof of Life */}
             <Route path="/proof-of-life" element={<Placeholder title="Proof of Life" />} />
-            <Route path="/contacts" element={<Placeholder title="Contacts" />} />
+            {/* Contacts: Use the REAL component */}
+            <Route path="/contacts" element={<Contacts user={user} />} />
             {/* Redirect unknown routes to home */}
             <Route path="*" element={<Navigate to="/" />} />
-              <Route path="/contacts" element={<Contacts user={user} />} />
           </Routes>
         </div>
       </div>
