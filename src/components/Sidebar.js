@@ -1,118 +1,115 @@
 import React, { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 
 const menu = [
   {
+    title: "Home",
+    path: "/"
+  },
+  {
     title: "Vaults",
-    children: ["Digital Platforms"]
+    children: [
+      { title: "Digital Platforms", path: "/vaults/digital-platforms" }
+    ]
   },
   {
     title: "Messages",
-    children: ["Personal Messages", "Last Goodbyes", "Videos"]
+    children: [
+      { title: "Personal Messages", path: "/messages/personal-messages" },
+      { title: "Last Goodbyes", path: "/messages/last-goodbyes" },
+      { title: "Videos", path: "/messages/videos" }
+    ]
   },
   {
     title: "Legal",
-    children: ["Important Documents", "Secure E-Will"]
+    children: [
+      { title: "Important Documents", path: "/legal/important-documents" },
+      { title: "Secure E-Will", path: "/legal/secure-e-will" }
+    ]
   },
   {
     title: "Personal",
-    children: ["Organ Donation", "Funeral Planning", "Memory Lane", "Belongings"]
+    children: [
+      { title: "Organ Donation", path: "/personal/organ-donation" },
+      { title: "Funeral Planning", path: "/personal/funeral-planning" },
+      { title: "Memory Lane", path: "/personal/memory-lane" },
+      { title: "Belongings", path: "/personal/belongings" }
+    ]
   },
   {
-    title: "Proof of Life"
+    title: "Proof of Life",
+    path: "/proof-of-life"
   },
   {
-    title: "Contacts"
+    title: "Contacts",
+    path: "/contacts"
   }
 ];
 
 export default function Sidebar() {
   const [open, setOpen] = useState({});
-  const navigate = useNavigate();
+  const location = useLocation();
 
-  // Toggle accordion section
-  const handleToggle = idx => {
-    setOpen(open => ({ ...open, [idx]: !open[idx] }));
-  };
-
-  // Handles menu clicks (except for Personal Messages)
-  const handlePlaceholder = (title) => {
-    alert(`"${title}" page is coming soon!`);
-  };
+  const toggle = idx => setOpen(o => ({ ...o, [idx]: !o[idx] }));
 
   return (
-    <aside style={{
-      width: 270,
-      background: "#645155",
-      color: "#fff",
-      minHeight: "100vh",
-      padding: "30px 0",
-      boxSizing: "border-box",
-      fontFamily: "inherit"
+    <div style={{
+      width: 260, background: "#645155", color: "#fff", height: "100vh", paddingTop: 25,
+      display: "flex", flexDirection: "column", fontFamily: "inherit", position: "fixed"
     }}>
-      <div style={{ fontWeight: 700, fontSize: 23, padding: "0 26px 28px" }}>
-        LastWishBox
-      </div>
-      <nav>
-        <ul style={{ listStyle: "none", margin: 0, padding: 0 }}>
-          {menu.map((section, idx) => (
-            <li key={section.title} style={{ marginBottom: 6 }}>
+      {menu.map((item, idx) => (
+        <div key={item.title}>
+          {item.children ? (
+            <div>
               <div
-                onClick={() =>
-                  section.children
-                    ? handleToggle(idx)
-                    : section.title === "Proof of Life" || section.title === "Contacts"
-                    ? handlePlaceholder(section.title)
-                    : null
-                }
+                onClick={() => toggle(idx)}
                 style={{
-                  cursor: section.children || section.title === "Proof of Life" || section.title === "Contacts"
-                    ? "pointer"
-                    : "default",
-                  fontWeight: 600,
-                  padding: "11px 26px",
-                  background: open[idx] ? "#80646b" : "none",
-                  borderRadius: 8,
-                  transition: "background 0.2s"
+                  fontWeight: 600, padding: "11px 20px", cursor: "pointer",
+                  background: open[idx] ? "#513e36" : "transparent",
+                  borderBottom: "1px solid #806c63"
                 }}
               >
-                {section.title}
-                {section.children && (
-                  <span style={{
-                    float: "right",
-                    fontSize: 14,
-                    transform: open[idx] ? "rotate(90deg)" : "rotate(0deg)",
-                    transition: "transform 0.2s"
-                  }}>
-                    ▶
-                  </span>
-                )}
+                {item.title}
               </div>
-              {section.children && open[idx] && (
-                <ul style={{ paddingLeft: 18, margin: 0 }}>
-                  {section.children.map(child => (
-                    <li key={child} style={{ padding: "6px 0 6px 10px", cursor: "pointer", color: "#fff", fontSize: 16 }}>
-                      {child === "Personal Messages" ? (
-                        // Navigate to /personal-messages for this item
-                        <span
-                          onClick={() => navigate("/personal-messages")}
-                          style={{ textDecoration: "underline", color: "#ffcf70", cursor: "pointer" }}
-                        >
-                          {child}
-                        </span>
-                      ) : (
-                        <span onClick={() => handlePlaceholder(child)} style={{ opacity: 0.82 }}>
-                          {child}
-                        </span>
-                      )}
-                    </li>
+              {open[idx] && (
+                <div>
+                  {item.children.map(child => (
+                    <Link
+                      key={child.title}
+                      to={child.path}
+                      style={{
+                        display: "block",
+                        padding: "9px 42px",
+                        color: location.pathname === child.path ? "#f9cb40" : "#fff",
+                        background: location.pathname === child.path ? "#2a0516" : "none",
+                        textDecoration: "none",
+                        borderBottom: "1px solid #75625a"
+                      }}
+                    >
+                      {child.title}
+                    </Link>
                   ))}
-                </ul>
+                </div>
               )}
-            </li>
-          ))}
-        </ul>
-      </nav>
-    </aside>
+            </div>
+          ) : (
+            <Link
+              to={item.path}
+              style={{
+                display: "block",
+                fontWeight: 600,
+                padding: "13px 20px",
+                color: location.pathname === item.path ? "#f9cb40" : "#fff",
+                background: location.pathname === item.path ? "#2a0516" : "none",
+                textDecoration: "none",
+                borderBottom: "1px solid #806c63"
+              }}
+            >
+              {item.title}
+            </Link>
+          )}
+        </div>
+      ))}
+    </div>
   );
 }
