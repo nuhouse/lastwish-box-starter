@@ -1,115 +1,159 @@
 import React, { useState } from "react";
-import { Link, useLocation } from "react-router-dom";
 
 const menu = [
   {
-    title: "Home",
+    label: "Home",
     path: "/"
   },
   {
-    title: "Vaults",
+    label: "Vaults",
     children: [
-      { title: "Digital Platforms", path: "/vaults/digital-platforms" }
+      { label: "Digital Platforms", path: "/digital-platforms" }
     ]
   },
   {
-    title: "Messages",
+    label: "Messages",
     children: [
-      { title: "Personal Messages", path: "/messages/personal-messages" },
-      { title: "Last Goodbyes", path: "/messages/last-goodbyes" },
-      { title: "Videos", path: "/messages/videos" }
+      { label: "Personal Messages", path: "/personal-messages" },
+      { label: "Last Goodbyes", path: "/last-goodbyes" },
+      { label: "Videos", path: "/videos" }
     ]
   },
   {
-    title: "Legal",
+    label: "Legal",
     children: [
-      { title: "Important Documents", path: "/legal/important-documents" },
-      { title: "Secure E-Will", path: "/legal/secure-e-will" }
+      { label: "Important Documents", path: "/important-documents" },
+      { label: "Secure E-Will", path: "/secure-e-will" }
     ]
   },
   {
-    title: "Personal",
+    label: "Personal",
     children: [
-      { title: "Organ Donation", path: "/personal/organ-donation" },
-      { title: "Funeral Planning", path: "/personal/funeral-planning" },
-      { title: "Memory Lane", path: "/personal/memory-lane" },
-      { title: "Belongings", path: "/personal/belongings" }
+      { label: "Organ Donation", path: "/organ-donation" },
+      { label: "Funeral Planning", path: "/funeral-planning" },
+      { label: "Memory Lane", path: "/memory-lane" },
+      { label: "Belongings", path: "/belongings" }
     ]
   },
-  {
-    title: "Proof of Life",
-    path: "/proof-of-life"
-  },
-  {
-    title: "Contacts",
-    path: "/contacts"
-  }
+  { label: "Proof of Life", path: "/proof-of-life" },
+  { label: "Contacts", path: "/contacts" }
 ];
 
 export default function Sidebar() {
-  const [open, setOpen] = useState({});
-  const location = useLocation();
+  const [openIndex, setOpenIndex] = useState(null);
+  const [mobileOpen, setMobileOpen] = useState(false);
 
-  const toggle = idx => setOpen(o => ({ ...o, [idx]: !o[idx] }));
+  const handleMenuClick = idx => {
+    setOpenIndex(openIndex === idx ? null : idx);
+  };
 
   return (
-    <div style={{
-      width: 260, background: "#645155", color: "#fff", height: "100vh", paddingTop: 25,
-      display: "flex", flexDirection: "column", fontFamily: "inherit", position: "fixed"
-    }}>
-      {menu.map((item, idx) => (
-        <div key={item.title}>
-          {item.children ? (
-            <div>
-              <div
-                onClick={() => toggle(idx)}
-                style={{
-                  fontWeight: 600, padding: "11px 20px", cursor: "pointer",
-                  background: open[idx] ? "#513e36" : "transparent",
-                  borderBottom: "1px solid #806c63"
-                }}
-              >
-                {item.title}
-              </div>
-              {open[idx] && (
-                <div>
-                  {item.children.map(child => (
-                    <Link
-                      key={child.title}
-                      to={child.path}
-                      style={{
-                        display: "block",
-                        padding: "9px 42px",
-                        color: location.pathname === child.path ? "#f9cb40" : "#fff",
-                        background: location.pathname === child.path ? "#2a0516" : "none",
-                        textDecoration: "none",
-                        borderBottom: "1px solid #75625a"
-                      }}
-                    >
-                      {child.title}
-                    </Link>
-                  ))}
-                </div>
-              )}
-            </div>
-          ) : (
-            <Link
-              to={item.path}
-              style={{
-                display: "block",
-                fontWeight: 600,
-                padding: "13px 20px",
-                color: location.pathname === item.path ? "#f9cb40" : "#fff",
-                background: location.pathname === item.path ? "#2a0516" : "none",
-                textDecoration: "none",
-                borderBottom: "1px solid #806c63"
-              }}
-            >
-              {item.title}
-            </Link>
-          )}
+    <>
+      {/* Hamburger for mobile */}
+      <div className="sidebar-mobile-toggle" onClick={() => setMobileOpen(!mobileOpen)}>
+        <span>&#9776;</span>
+      </div>
+      <aside className={`sidebar-root ${mobileOpen ? "sidebar-open" : ""}`}>
+        <div style={{
+          fontWeight: 700, fontSize: 22, padding: "24px 0 10px 20px",
+          letterSpacing: 1
+        }}>
+          LastWish Box
         </div>
-      ))}
-    </div>
+        <nav>
+          <ul style={{ listStyle: "none", padding: 0, margin: 0 }}>
+            {menu.map((item, idx) => (
+              <li key={item.label}>
+                <div
+                  onClick={() => item.children ? handleMenuClick(idx) : null}
+                  style={{
+                    padding: "12px 20px",
+                    cursor: "pointer",
+                    fontWeight: item.children ? 600 : 400,
+                    background: openIndex === idx ? "#523f48" : "transparent"
+                  }}
+                >
+                  <a
+                    href={item.path || "#"}
+                    style={{
+                      color: "#fff",
+                      textDecoration: "none",
+                      display: "inline-block",
+                      width: "100%"
+                    }}
+                  >
+                    {item.label}
+                  </a>
+                  {item.children && (
+                    <span style={{ float: "right" }}>
+                      {openIndex === idx ? "▼" : "►"}
+                    </span>
+                  )}
+                </div>
+                {item.children && openIndex === idx && (
+                  <ul style={{
+                    listStyle: "none",
+                    paddingLeft: 28,
+                    background: "#6b5363"
+                  }}>
+                    {item.children.map(child => (
+                      <li key={child.label}>
+                        <a
+                          href={child.path}
+                          style={{
+                            color: "#eee",
+                            textDecoration: "none",
+                            display: "block",
+                            padding: "8px 0"
+                          }}
+                        >
+                          {child.label}
+                        </a>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </li>
+            ))}
+          </ul>
+        </nav>
+      </aside>
+      <style>{`
+        .sidebar-root {
+          width: 230px;
+          background: #645155;
+          color: #fff;
+          min-height: 100vh;
+          position: fixed;
+          top: 0; left: 0; bottom: 0;
+          z-index: 100;
+          transition: left 0.2s;
+        }
+        .sidebar-mobile-toggle {
+          display: none;
+          position: fixed;
+          left: 10px; top: 10px;
+          z-index: 200;
+          background: #645155;
+          color: #fff;
+          border-radius: 5px;
+          padding: 7px 14px;
+          font-size: 25px;
+          cursor: pointer;
+        }
+        @media (max-width: 900px) {
+          .sidebar-root {
+            left: -230px;
+            position: fixed;
+          }
+          .sidebar-root.sidebar-open {
+            left: 0;
+          }
+          .sidebar-mobile-toggle {
+            display: block;
+          }
+        }
+      `}</style>
+    </>
   );
 }
