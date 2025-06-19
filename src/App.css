@@ -1,136 +1,123 @@
-/* App.css */
-
-.app-root {
-  display: flex;
-  min-height: 100vh;
-}
-
+/* Sidebar layout */
 .sidebar-root {
-  width: 230px;
-  min-width: 230px;
-  background: #645155;
+  width: 238px;
+  background: #2a0516;
   color: #fff;
+  padding-top: 18px;
   min-height: 100vh;
-  position: fixed;
-  top: 0; left: 0; bottom: 0;
-  z-index: 100;
-  transition: left 0.2s;
-  box-shadow: 1px 0 9px #22071a11;
-  overflow-y: auto;
-  padding-bottom: 30px;
+  position: relative;
+  z-index: 20;
+  box-shadow: 2px 0 14px 0 #22091a16;
+  transition: left 0.26s;
 }
 
-.content {
-  flex: 1;
-  margin-left: 230px;
-  transition: margin 0.2s;
-  background: #f8f8fa;
-  min-height: 100vh;
+.sidebar-brand {
+  font-weight: bold;
+  font-size: 24px;
+  letter-spacing: 1.2px;
+  margin-bottom: 15px;
+  text-align: center;
+  color: #fff;
 }
 
 .sidebar-list {
   list-style: none;
-  padding: 0 0 20px 0;
+  padding: 0 0 30px 0;
   margin: 0;
 }
 
-.sidebar-list > li {
-  margin: 2px 0;
+.sidebar-list li {
+  margin-bottom: 2px;
 }
 
-.sidebar-parent {
-  cursor: pointer;
+.sidebar-parent,
+.sidebar-single {
   display: flex;
   align-items: center;
-  padding: 13px 22px 13px 22px;
-  font-size: 1.09em;
-  font-weight: 500;
-  color: #fff;
-  border-radius: 8px;
+  padding: 13px 20px 13px 22px;
+  cursor: pointer;
+  font-size: 1.05rem;
+  border-radius: 9px;
   transition: background 0.14s;
   user-select: none;
 }
 
-.sidebar-parent.open, .sidebar-parent:hover {
-  background: #442730;
+.sidebar-parent.open,
+.sidebar-single.active,
+.sidebar-parent.active {
+  background: #645155;
+  color: #fff;
+}
+
+.sidebar-parent span:last-child {
+  margin-left: auto;
 }
 
 .sidebar-children {
-  margin: 0 0 4px 0;
-  padding-left: 18px;
+  padding-left: 16px;
+  margin-top: 1px;
 }
 
 .sidebar-children li a {
   display: block;
-  padding: 9px 15px;
-  font-size: 1em;
-  color: #ffe9d0;
-  border-radius: 7px;
+  padding: 8px 15px;
+  color: #f8e5fc;
+  border-radius: 6px;
   text-decoration: none;
-  margin: 1px 0;
-  transition: background 0.13s, color 0.13s;
+  font-size: 0.98rem;
+  transition: background 0.14s;
 }
 
-.sidebar-children li a.active, .sidebar-children li a:hover {
-  background: #ffb374;
-  color: #2a0516;
-}
-
-.sidebar-single {
-  display: flex;
-  align-items: center;
-  padding: 12px 22px;
-  font-size: 1.09em;
-  font-weight: 500;
+.sidebar-children li a.active,
+.sidebar-children li a:hover {
+  background: #e97c13;
   color: #fff;
-  border-radius: 8px;
-  text-decoration: none;
-  margin: 2px 0;
-  transition: background 0.14s, color 0.13s;
-}
-.sidebar-single.active, .sidebar-single:hover {
-  background: #ffb374;
-  color: #2a0516;
 }
 
-/* Mobile Responsive */
+/* Mobile styles */
 .sidebar-mobile-toggle {
   display: none;
   position: fixed;
-  left: 17px;
-  top: 17px;
-  z-index: 999;
-  font-size: 2.1em;
-  background: #f8f8fa;
-  border-radius: 10px;
-  padding: 5px 10px 2px 10px;
-  box-shadow: 0 2px 12px #2a05160c;
+  top: 14px;
+  left: 18px;
+  font-size: 2.2rem;
+  color: #2a0516;
+  background: #fff;
+  border-radius: 7px;
+  z-index: 1100;
+  padding: 1px 10px 2px 8px;
   cursor: pointer;
+  border: 1px solid #eee;
+  box-shadow: 1px 2px 12px #00000012;
 }
 
 @media (max-width: 900px) {
   .sidebar-root {
-    left: -230px;
     position: fixed;
-    box-shadow: 3px 0 13px #22071a19;
+    left: -260px;
+    top: 0;
+    height: 100vh;
+    width: 230px;
+    transition: left 0.25s;
   }
   .sidebar-root.sidebar-open {
     left: 0;
-  }
-  .content {
-    margin-left: 0 !important;
-    padding: 12px;
+    box-shadow: 6px 0 24px 0 #1c0b1c3c;
   }
   .sidebar-mobile-toggle {
     display: block;
   }
+  .content {
+    margin-left: 0 !important;
+  }
 }
 
-/* Optional: header tweaks for mobile */
-@media (max-width: 600px) {
-  .app-header {
-    flex-direction: column !important;
-    align-items: flex-start !important;
-    gap: 9px;
+@media (min-width: 900px) {
+  .sidebar-mobile-toggle {
+    display: none;
+  }
+  .content {
+    margin-left: 238px;
+    transition: margin-left 0.23s;
   }
 }
