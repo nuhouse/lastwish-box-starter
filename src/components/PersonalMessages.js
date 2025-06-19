@@ -188,7 +188,24 @@ export default function PersonalMessages({ user }) {
                 <div style={{ marginBottom: 6, whiteSpace: "pre-line" }}>{msg.text}</div>
                 {msg.fileUrl && (
                   msg.fileType === "image" ? (
-                    <img src={msg.fileUrl} alt="" style={{ maxWidth: "100%", borderRadius: 8, marginBottom: 4 }} />
+                    <img
+  src={msg.fileUrl}
+  alt=""
+  style={{
+    width: 100,
+    height: 100,
+    objectFit: "cover",
+    borderRadius: 8,
+    marginBottom: 4,
+    border: "2px solid #eee",
+    boxShadow: "0 2px 6px rgba(0,0,0,0.06)",
+    transition: "transform 0.18s",
+    cursor: "pointer"
+  }}
+  onMouseOver={e => e.currentTarget.style.transform = "scale(1.08)"}
+  onMouseOut={e => e.currentTarget.style.transform = "scale(1)"}
+/>
+
                   ) : msg.fileType === "video" ? (
                     <video src={msg.fileUrl} controls style={{ maxWidth: "100%", borderRadius: 8, marginBottom: 4 }} />
                   ) : (
