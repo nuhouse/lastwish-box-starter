@@ -1,3 +1,5 @@
+<div style={{color:'red'}}>DEBUG EDIT BUTTON SHOULD SHOW</div>
+
 import React, { useEffect, useState, useRef } from "react";
 import { db, storage } from "../firebase";
 import {
