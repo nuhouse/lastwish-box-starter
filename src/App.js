@@ -4,8 +4,10 @@ import Sidebar from "./components/Sidebar";
 import Auth from "./components/Auth";
 import PersonalMessages from "./components/PersonalMessages";
 import Homepage from "./components/Homepage";
-import './App.css';
 import Contacts from "./components/Contacts";
+import Belongings from "./components/Belongings"; // <-- ADD THIS
+import './App.css';
+
 
 // Placeholder for sections you haven’t built yet
 const Placeholder = ({ title }) => (
