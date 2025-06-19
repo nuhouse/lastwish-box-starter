@@ -55,7 +55,7 @@ function App() {
             <Route path="/personal/organ-donation" element={<Placeholder title="Organ Donation" />} />
             <Route path="/personal/funeral-planning" element={<Placeholder title="Funeral Planning" />} />
             <Route path="/personal/memory-lane" element={<Placeholder title="Memory Lane" />} />
-            <Route path="/personal/belongings" element={<Placeholder title="Belongings" />} />
+            <Route path="/personal/belongings" element={<Belongings user={user} />} />
             {/* Proof of Life */}
             <Route path="/proof-of-life" element={<Placeholder title="Proof of Life" />} />
             {/* Contacts: Use the REAL component */}
