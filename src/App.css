@@ -1,0 +1,6 @@
+/* src/App.css */
+.home-block:hover, .home-block:focus {
+  transform: translateY(-6px) scale(1.04);
+  box-shadow: 0 8px 24px 0 #2a05161a;
+  outline: 2px solid #e97c13;
+}
