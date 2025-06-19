@@ -5,7 +5,7 @@ import Auth from "./components/Auth";
 import PersonalMessages from "./components/PersonalMessages";
 import Homepage from "./components/Homepage";
 import Contacts from "./components/Contacts";
-import Belongings from "./components/Belongings"; // <-- ADD THIS
+import Belongings from "./components/Belongings";
 import './App.css';
 import OrganDonation from "./components/OrganDonation";
 
