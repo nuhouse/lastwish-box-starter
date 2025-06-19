@@ -1,5 +1,6 @@
 import React from "react";
 import { useNavigate } from "react-router-dom";
+import './HomePage.css';
 
 // Each block has a `path` for navigation (update as needed!)
 const serviceBlocks = [
