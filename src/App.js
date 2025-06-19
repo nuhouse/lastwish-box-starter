@@ -5,6 +5,7 @@ import Auth from "./components/Auth";
 import PersonalMessages from "./components/PersonalMessages";
 import Homepage from "./components/Homepage";
 import './App.css';
+import Contacts from "./components/Contacts";
 
 // Placeholder for sections you haven’t built yet
 const Placeholder = ({ title }) => (
@@ -60,6 +61,7 @@ function App() {
             <Route path="/contacts" element={<Placeholder title="Contacts" />} />
             {/* Redirect unknown routes to home */}
             <Route path="*" element={<Navigate to="/" />} />
+              <Route path="/contacts" element={<Contacts user={user} />} />
           </Routes>
         </div>
       </div>
