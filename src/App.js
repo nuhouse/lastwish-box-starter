@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
+import Homepage from "./components/Homepage";
 import Sidebar from "./components/Sidebar";
 import Auth from "./components/Auth";
 import PersonalMessages from "./components/PersonalMessages";
@@ -53,6 +54,7 @@ function App() {
             }}>Logout</button>
           </div>
           <Routes>
+  <Route path="/" element={<Homepage />} />
             <Route path="/" element={<Navigate to="/personal-messages" />} />
             <Route path="/personal-messages" element={<PersonalMessages user={user} />} />
             {features.filter(f => f.path !== "personal-messages").map(f => (
