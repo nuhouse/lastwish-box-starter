@@ -7,6 +7,7 @@ import Homepage from "./components/Homepage";
 import Contacts from "./components/Contacts";
 import Belongings from "./components/Belongings"; // <-- ADD THIS
 import './App.css';
+import OrganDonation from "./components/OrganDonation";
 
 
 // Placeholder for sections you haven’t built yet
@@ -54,7 +55,8 @@ function App() {
             <Route path="/legal/important-documents" element={<Placeholder title="Important Documents" />} />
             <Route path="/legal/secure-e-will" element={<Placeholder title="Secure E-Will" />} />
             {/* Personal */}
-            <Route path="/personal/organ-donation" element={<OrganDonation user={user} />} />
+           <Route path="/personal/organ-donation" element={<OrganDonation user={user} />} />
+
             <Route path="/personal/funeral-planning" element={<Placeholder title="Funeral Planning" />} />
             <Route path="/personal/memory-lane" element={<Placeholder title="Memory Lane" />} />
             <Route path="/personal/belongings" element={<Belongings user={user} />} />
