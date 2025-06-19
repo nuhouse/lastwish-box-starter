@@ -113,7 +113,7 @@ export default function PersonalMessages({ user }) {
 
   return (
     <div>
-    <div style={{color:'red'}}>DEBUG EDIT BUTTON SHOULD SHOW</div>
+    
       <h2>Personal Messages</h2>
       <form onSubmit={handleUpload} style={{ marginBottom: 24, display: "flex", flexDirection: "column", gap: 12, maxWidth: 430 }}>
         <textarea
