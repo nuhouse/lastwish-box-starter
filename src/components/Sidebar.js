@@ -1,12 +1,11 @@
 import React, { useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 
-// Define the sidebar structure
 const menu = [
   {
     label: "Home",
     path: "/",
-    icon: "🏠"
+    icon: "🏠",
   },
   {
     label: "Vaults",
@@ -59,29 +58,34 @@ export default function Sidebar() {
   const [openMenus, setOpenMenus] = useState({});
   const [mobileOpen, setMobileOpen] = useState(false);
 
-  // Toggles child menus open/close (accordion)
+  // Toggles accordion for parents
   function toggleMenu(index) {
     setOpenMenus(prev => ({ ...prev, [index]: !prev[index] }));
   }
 
-  // Handles mobile sidebar toggle
+  // Mobile hamburger
   function handleMobileToggle() {
     setMobileOpen(v => !v);
   }
 
-  // Close sidebar on link click (mobile)
+  // Close sidebar on link click (for mobile)
   function handleLinkClick() {
     setMobileOpen(false);
   }
 
+  // Helper to check if any child is active for highlighting parent
+  function isChildActive(children) {
+    return children.some(child => location.pathname === child.path);
+  }
+
   return (
     <>
-      {/* Hamburger Icon */}
+      {/* Hamburger Icon for mobile */}
       <div className="sidebar-mobile-toggle" onClick={handleMobileToggle}>
         <span>&#9776;</span>
       </div>
       <aside className={`sidebar-root${mobileOpen ? " sidebar-open" : ""}`}>
-        <div style={{ fontWeight: "bold", fontSize: 23, margin: "18px 0 16px 0", textAlign: "center", color: "#fff" }}>
+        <div className="sidebar-brand">
           Lastwish Box
         </div>
         <nav>
@@ -91,19 +95,28 @@ export default function Sidebar() {
                 {item.children ? (
                   <>
                     <div
-                      className={`sidebar-parent${openMenus[i] ? " open" : ""}`}
+                      className={
+                        "sidebar-parent" +
+                        (openMenus[i] ? " open" : "") +
+                        (isChildActive(item.children) ? " active" : "")
+                      }
                       onClick={() => toggleMenu(i)}
                     >
                       <span style={{ marginRight: 10 }}>{item.icon}</span>
                       {item.label}
-                      <span style={{
-                        marginLeft: "auto",
-                        fontSize: 18,
-                        transition: "transform 0.2s",
-                        transform: openMenus[i] ? "rotate(90deg)" : "rotate(0)"
-                      }}>▶</span>
+                      <span
+                        style={{
+                          marginLeft: "auto",
+                          fontSize: 18,
+                          transition: "transform 0.2s",
+                          transform: openMenus[i] ? "rotate(90deg)" : "rotate(0)"
+                        }}
+                      >▶</span>
                     </div>
-                    <ul className="sidebar-children" style={{ display: openMenus[i] ? "block" : "none" }}>
+                    <ul
+                      className="sidebar-children"
+                      style={{ display: openMenus[i] || isChildActive(item.children) ? "block" : "none" }}
+                    >
                       {item.children.map(child => (
                         <li key={child.label}>
                           <Link
@@ -121,7 +134,10 @@ export default function Sidebar() {
                   <Link
                     to={item.path}
                     onClick={handleLinkClick}
-                    className={location.pathname === item.path ? "active sidebar-single" : "sidebar-single"}
+                    className={
+                      "sidebar-single" +
+                      (location.pathname === item.path ? " active" : "")
+                    }
                   >
                     <span style={{ marginRight: 10 }}>{item.icon}</span>
                     {item.label}
