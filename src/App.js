@@ -1,10 +1,27 @@
-import React from "react";
+import React, { useState } from "react";
+import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import Sidebar from "./components/Sidebar";
+import Homepage from "./components/Homepage";
+import './App.css';
 
-export default function App() {
+function App() {
+  // Just hardcode "logged in" for now to simplify debugging
   return (
-    <div style={{ color: "black", padding: 60 }}>
-      <h1>Hello world!</h1>
-      <p>If you see this, React is running fine.</p>
-    </div>
+    <Router>
+      <div className="app-root">
+        <Sidebar />
+        <div className="content">
+          <div className="app-header">
+            <img src="/logo-placeholder.png" alt="Logo" style={{ width: 44, height: 44, marginRight: 10 }} />
+            <span style={{ fontWeight: "bold", fontSize: "1.3rem", letterSpacing: 1 }}>Lastwish Box</span>
+          </div>
+          <Routes>
+            <Route path="/" element={<Homepage />} />
+          </Routes>
+        </div>
+      </div>
+    </Router>
   );
 }
+
+export default App;
