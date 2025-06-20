@@ -8,8 +8,6 @@ import Contacts from "./components/Contacts";
 import Belongings from "./components/Belongings";
 import './App.css';
 
-
-
 // Placeholder for sections you haven’t built yet
 const Placeholder = ({ title }) => (
   <div style={{ padding: 32 }}>
@@ -55,14 +53,12 @@ function App() {
             <Route path="/legal/important-documents" element={<Placeholder title="Important Documents" />} />
             <Route path="/legal/secure-e-will" element={<Placeholder title="Secure E-Will" />} />
             {/* Personal */}
-           <Route path="/personal/organ-donation" element={<OrganDonation user={user} />} />
-
             <Route path="/personal/funeral-planning" element={<Placeholder title="Funeral Planning" />} />
             <Route path="/personal/memory-lane" element={<Placeholder title="Memory Lane" />} />
             <Route path="/personal/belongings" element={<Belongings user={user} />} />
             {/* Proof of Life */}
             <Route path="/proof-of-life" element={<Placeholder title="Proof of Life" />} />
-            {/* Contacts: Use the REAL component */}
+            {/* Contacts */}
             <Route path="/contacts" element={<Contacts user={user} />} />
             {/* Redirect unknown routes to home */}
             <Route path="*" element={<Navigate to="/" />} />
