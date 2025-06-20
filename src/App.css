@@ -2,3 +2,14 @@ body {
   background: #fff;
   color: #222;
 }
+.sidebar-root {
+  width: 238px;
+  background: #2a0516;
+  color: #fff;
+  padding-top: 18px;
+  min-height: 100vh;
+  position: relative;
+  z-index: 20;
+  box-shadow: 2px 0 14px 0 #22091a16;
+  transition: left 0.26s;
+}
