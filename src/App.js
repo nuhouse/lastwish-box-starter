@@ -6,8 +6,9 @@ import PersonalMessages from "./components/PersonalMessages";
 import Homepage from "./components/Homepage";
 import Contacts from "./components/Contacts";
 import Belongings from "./components/Belongings";
-import './App.css';
 import OrganDonation from "./components/OrganDonation";
+import './App.css';
+
 
 
 // Placeholder for sections you haven’t built yet
