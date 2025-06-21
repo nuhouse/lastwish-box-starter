@@ -8,6 +8,7 @@ import Contacts from "./components/Contacts";
 import Belongings from "./components/Belongings";
 import './App.css';
 
+
 // Placeholder for unfinished sections
 const Placeholder = ({ title }) => (
   <div style={{ padding: 32 }}>
@@ -42,7 +43,7 @@ function App() {
             }}>Logout</button>
           </div>
           <Routes>
-            <Route path="/" element={<Homepage />} />
+            <Route path="/" element={<div style={{color: "red"}}>Hello world!</div>} />
             {/* Vaults */}
             <Route path="/vaults/digital-platforms" element={<Placeholder title="Digital Platforms" />} />
             {/* Messages */}
