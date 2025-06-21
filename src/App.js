@@ -43,7 +43,7 @@ function App() {
             }}>Logout</button>
           </div>
           <Routes>
-            <Route path="/" element={<div style={{color: "red"}}>Hello world!</div>} />
+            <Route path="/" element={<Homepage />} />
             {/* Vaults */}
             <Route path="/vaults/digital-platforms" element={<Placeholder title="Digital Platforms" />} />
             {/* Messages */}
