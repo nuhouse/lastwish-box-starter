@@ -6,6 +6,7 @@ import PersonalMessages from "./components/PersonalMessages";
 import Homepage from "./components/Homepage";
 import Contacts from "./components/Contacts";
 import Belongings from "./components/Belongings";
+import OrganDonation from "./components/OrganDonation";
 import './App.css';
 
 
@@ -60,6 +61,7 @@ function App() {
             {/* Proof of Life */}
             <Route path="/proof-of-life" element={<Placeholder title="Proof of Life" />} />
             {/* Contacts: Use the REAL component */}
+<Route path="/personal/organ-donation" element={<OrganDonation user={user} />} />
             <Route path="/contacts" element={<Contacts user={user} />} />
             {/* Redirect unknown routes to home */}
             <Route path="*" element={<Navigate to="/" />} />
