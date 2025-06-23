@@ -476,12 +476,11 @@ export default function Devices({ user }) {
       {showForm && (
   <div className="modal-overlay">
     <div className="device-modal-box">
-      <form className="device-form" onSubmit={handleSubmit}>
-        {/* ...your fields here... */}
-      </form>
+      {renderForm()}
     </div>
   </div>
 )}
+
 <style>{`
   .modal-overlay {
     position: fixed;
