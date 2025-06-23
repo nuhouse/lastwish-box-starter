@@ -270,61 +270,63 @@ export default function MemoryLane({ user }) {
   function renderForm() {
     return (
       <div className="modal-overlay">
-        <form className="memory-form" onSubmit={handleSubmit}>
-          <h3 style={{ marginBottom: 7 }}>{editingId ? "Edit Memory" : "Add Memory"}</h3>
-          <input name="title" value={form.title} onChange={handleInput} placeholder="Title" maxLength={50} required />
-          <input name="date" type="date" value={form.date} onChange={handleInput} />
-          <textarea name="description" value={form.description} onChange={handleInput} placeholder="Describe the memory..." rows={4} required />
-          <input name="tags" value={form.tags} onChange={handleInput} placeholder="Tags (comma separated)" />
-          {/* Images */}
-          <div>
-            <label style={{ fontWeight: 500 }}>Photos</label>
-            <input
-              type="file"
-              accept="image/*"
-              multiple
-              ref={fileInputImages}
-              onChange={handleImageFiles}
-            />
-            {form.images?.length > 0 && (
-              <div style={{ margin: "8px 0" }}>
-                {form.images.map((img, i) => (
-                  <img key={i} src={img} alt="" style={{ width: 48, height: 48, objectFit: "cover", borderRadius: 7, marginRight: 5 }} />
-                ))}
-              </div>
-            )}
-          </div>
-          {/* Video */}
-          <div>
-            <label style={{ fontWeight: 500 }}>Video</label>
-            <input
-              type="file"
-              accept="video/*"
-              ref={fileInputVideo}
-              onChange={handleVideoFile}
-            />
-            {form.videoUrl && (
-              <video src={form.videoUrl} controls style={{ width: 80, borderRadius: 6, marginTop: 7 }} />
-            )}
-          </div>
-          {/* Audio */}
-          <div>
-            <label style={{ fontWeight: 500 }}>Audio</label>
-            <input
-              type="file"
-              accept="audio/*"
-              ref={fileInputAudio}
-              onChange={handleAudioFile}
-            />
-            {form.audioUrl && (
-              <audio src={form.audioUrl} controls style={{ width: 80, marginTop: 7 }} />
-            )}
-          </div>
-          <div style={{ display: "flex", gap: 10, marginTop: 12 }}>
-            <button className="btn" style={{ background: "#2a0516", color: "#fff", flex: 1 }} disabled={uploading}>{editingId ? "Update" : "Add"}</button>
-            <button type="button" className="btn" style={{ background: "#ccc", color: "#222" }} onClick={closeForm}>Cancel</button>
-          </div>
-        </form>
+        <div className="memory-form-modal-box">
+          <form className="memory-form" onSubmit={handleSubmit}>
+            <h3 style={{ marginBottom: 7 }}>{editingId ? "Edit Memory" : "Add Memory"}</h3>
+            <input name="title" value={form.title} onChange={handleInput} placeholder="Title" maxLength={50} required />
+            <input name="date" type="date" value={form.date} onChange={handleInput} />
+            <textarea name="description" value={form.description} onChange={handleInput} placeholder="Describe the memory..." rows={4} required />
+            <input name="tags" value={form.tags} onChange={handleInput} placeholder="Tags (comma separated)" />
+            {/* Images */}
+            <div>
+              <label style={{ fontWeight: 500 }}>Photos</label>
+              <input
+                type="file"
+                accept="image/*"
+                multiple
+                ref={fileInputImages}
+                onChange={handleImageFiles}
+              />
+              {form.images?.length > 0 && (
+                <div style={{ margin: "8px 0" }}>
+                  {form.images.map((img, i) => (
+                    <img key={i} src={img} alt="" style={{ width: 48, height: 48, objectFit: "cover", borderRadius: 7, marginRight: 5 }} />
+                  ))}
+                </div>
+              )}
+            </div>
+            {/* Video */}
+            <div>
+              <label style={{ fontWeight: 500 }}>Video</label>
+              <input
+                type="file"
+                accept="video/*"
+                ref={fileInputVideo}
+                onChange={handleVideoFile}
+              />
+              {form.videoUrl && (
+                <video src={form.videoUrl} controls style={{ width: 80, borderRadius: 6, marginTop: 7 }} />
+              )}
+            </div>
+            {/* Audio */}
+            <div>
+              <label style={{ fontWeight: 500 }}>Audio</label>
+              <input
+                type="file"
+                accept="audio/*"
+                ref={fileInputAudio}
+                onChange={handleAudioFile}
+              />
+              {form.audioUrl && (
+                <audio src={form.audioUrl} controls style={{ width: 80, marginTop: 7 }} />
+              )}
+            </div>
+            <div style={{ display: "flex", gap: 10, marginTop: 12 }}>
+              <button className="btn" style={{ background: "#2a0516", color: "#fff", flex: 1 }} disabled={uploading}>{editingId ? "Update" : "Add"}</button>
+              <button type="button" className="btn" style={{ background: "#ccc", color: "#222" }} onClick={closeForm}>Cancel</button>
+            </div>
+          </form>
+        </div>
       </div>
     );
   }
@@ -399,20 +401,31 @@ export default function MemoryLane({ user }) {
           position: absolute; top: 12px; right: 18px; font-size: 2rem; background: none;
           border: none; color: #c39; cursor: pointer; z-index: 10;
         }
-        .memory-form {
+        .memory-form-modal-box {
           background: #fff;
           border-radius: 18px;
           padding: 24px 18px 14px 18px;
-          max-width: 400px;
-          width: 94vw;
+          max-width: 420px;
+          width: 96vw;
+          display: flex;
+          flex-direction: column;
+          box-shadow: 0 8px 36px 0 #2a051629;
+          margin: 0 auto;
+          max-height: 96vh;
+          overflow-y: auto;
+          box-sizing: border-box;
+        }
+        .memory-form {
+          width: 100%;
           display: flex;
           flex-direction: column;
           gap: 12px;
-          box-shadow: 0 8px 36px 0 #2a051629;
-          margin: 0 auto;
+          box-sizing: border-box;
         }
         .memory-form input, .memory-form textarea {
-          width: 100%; border: 1px solid #bfa4c4; border-radius: 7px;
+          width: 100%; 
+          box-sizing: border-box;
+          border: 1px solid #bfa4c4; border-radius: 7px;
           padding: 7px 10px; font-size: 1em; background: #fff; margin-bottom: 2px;
         }
         .memory-form textarea { min-height: 56px; }
