@@ -501,6 +501,9 @@ export default function Devices({ user }) {
     display: flex;
     flex-direction: column;
     gap: 14px;
+    /* Extra for mobile scroll on long forms */
+    max-height: 96vh;
+    overflow-y: auto;
   }
   .device-form label {
     display: block;
