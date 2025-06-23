@@ -57,7 +57,7 @@ function App() {
             <Route path="/legal/important-documents" element={<Placeholder title="Important Documents" />} />
             <Route path="/legal/secure-e-will" element={<Placeholder title="Secure E-Will" />} />
             {/* Personal */}
-            <Route path="/personal/funeral-planning" element={<Placeholder title="Funeral Planning" />} />
+            <Route path="/personal/funeral-planning" element={<FuneralPlanning user={user} />} />
             <Route path="/personal/memory-lane" element={<Placeholder title="Memory Lane" />} />
             <Route path="/personal/belongings" element={<Belongings user={user} />} />
             {/* Proof of Life */}
