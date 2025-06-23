@@ -8,12 +8,13 @@ const menu = [
     icon: "🏠",
   },
   {
-    label: "Vaults",
-    icon: "🔒",
-    children: [
-      { label: "Digital Platforms", path: "/vaults/digital-platforms" }
-    ]
-  },
+  label: "Vaults",
+  icon: "🔒",
+  children: [
+    { label: "Digital Platforms", path: "/vaults/digital-platforms" },
+    { label: "Devices", path: "/vaults/devices" }
+  ]
+},
   {
     label: "Messages",
     icon: "✉️",
