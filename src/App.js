@@ -8,6 +8,7 @@ import Contacts from "./components/Contacts";
 import Belongings from "./components/Belongings";
 import OrganDonation from "./components/OrganDonation";
 import Devices from "./components/Devices";
+import FuneralPlanning from "./components/FuneralPlanning";
 import './App.css';
 
 
