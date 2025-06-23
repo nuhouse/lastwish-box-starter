@@ -180,211 +180,209 @@ export default function Devices({ user }) {
     return /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
   }
 
-  // --- Render Form
+  // --- Render Form (***NO overlay here***)
   function renderForm() {
     const isPhone = formType === "phone";
     return (
-      <div className="modal-overlay">
-        <form
-          className="device-form"
-          onSubmit={handleSubmit}
-          style={{ minWidth: 310, maxWidth: 370 }}
-        >
-          <h3 style={{ marginBottom: 10 }}>
-            {editingId ? "Edit Device" : "Add Device"}
-          </h3>
-          {/* Nickname */}
-          <label>Device Nickname
-            <input
-              name="nickname"
-              type="text"
-              value={form.nickname}
-              onChange={handleInput}
-              required
-              maxLength={40}
-              placeholder="e.g. Dad's MacBook, Work iPhone"
-            />
-          </label>
-          {/* Make */}
-          <label>Make
-            <select
-              name="make"
-              value={form.make}
-              onChange={handleInput}
-              required
-            >
-              <option value="">Select...</option>
-              {(isPhone ? PHONE_MAKES : COMPUTER_MAKES).map(make =>
-                <option key={make} value={make}>{make}</option>
+      <form
+        className="device-form"
+        onSubmit={handleSubmit}
+        style={{ minWidth: 310, maxWidth: 370 }}
+      >
+        <h3 style={{ marginBottom: 10 }}>
+          {editingId ? "Edit Device" : "Add Device"}
+        </h3>
+        {/* Nickname */}
+        <label>Device Nickname
+          <input
+            name="nickname"
+            type="text"
+            value={form.nickname}
+            onChange={handleInput}
+            required
+            maxLength={40}
+            placeholder="e.g. Dad's MacBook, Work iPhone"
+          />
+        </label>
+        {/* Make */}
+        <label>Make
+          <select
+            name="make"
+            value={form.make}
+            onChange={handleInput}
+            required
+          >
+            <option value="">Select...</option>
+            {(isPhone ? PHONE_MAKES : COMPUTER_MAKES).map(make =>
+              <option key={make} value={make}>{make}</option>
+            )}
+          </select>
+        </label>
+        {/* Phone/Computer Specific */}
+        {isPhone ? (
+          <>
+            <label>Phone Number
+              <input
+                name="phoneNumber"
+                type="text"
+                value={form.phoneNumber}
+                onChange={handleInput}
+                maxLength={18}
+              />
+            </label>
+            <label>Phone Passcode
+              <input
+                name="phonePasscode"
+                type="password"
+                value={form.phonePasscode}
+                onChange={handleInput}
+                minLength={4}
+                maxLength={18}
+                autoComplete="new-password"
+              />
+            </label>
+            <label>Confirm Passcode
+              <input
+                type="password"
+                value={confirm}
+                onChange={e => setConfirm(e.target.value)}
+                minLength={4}
+                maxLength={18}
+                autoComplete="new-password"
+                required
+              />
+              {confirm && !passValid && (
+                <span style={{ color: "#b40000", fontSize: 13 }}>
+                  Passcodes do not match.
+                </span>
               )}
-            </select>
-          </label>
-          {/* Phone/Computer Specific */}
-          {isPhone ? (
-            <>
-              <label>Phone Number
-                <input
-                  name="phoneNumber"
-                  type="text"
-                  value={form.phoneNumber}
-                  onChange={handleInput}
-                  maxLength={18}
-                />
-              </label>
-              <label>Phone Passcode
-                <input
-                  name="phonePasscode"
-                  type="password"
-                  value={form.phonePasscode}
-                  onChange={handleInput}
-                  minLength={4}
-                  maxLength={18}
-                  autoComplete="new-password"
-                />
-              </label>
-              <label>Confirm Passcode
-                <input
-                  type="password"
-                  value={confirm}
-                  onChange={e => setConfirm(e.target.value)}
-                  minLength={4}
-                  maxLength={18}
-                  autoComplete="new-password"
-                  required
-                />
-                {confirm && !passValid && (
-                  <span style={{ color: "#b40000", fontSize: 13 }}>
-                    Passcodes do not match.
-                  </span>
-                )}
-              </label>
-            </>
-          ) : (
-            <>
-              <label>Username
-                <input
-                  name="username"
-                  type="text"
-                  value={form.username}
-                  onChange={handleInput}
-                  maxLength={24}
-                />
-              </label>
-              <label>Login Password
-                <input
-                  name="loginPassword"
-                  type="password"
-                  value={form.loginPassword}
-                  onChange={handleInput}
-                  minLength={4}
-                  maxLength={30}
-                  autoComplete="new-password"
-                />
-              </label>
-              <label>Confirm Password
-                <input
-                  type="password"
-                  value={confirm}
-                  onChange={e => setConfirm(e.target.value)}
-                  minLength={4}
-                  maxLength={30}
-                  autoComplete="new-password"
-                  required
-                />
-                {confirm && !passValid && (
-                  <span style={{ color: "#b40000", fontSize: 13 }}>
-                    Passwords do not match.
-                  </span>
-                )}
-              </label>
-            </>
-          )}
-          {/* Contact */}
-          <label>Contact
-            <select
-              name="contact"
-              value={form.contact}
-              onChange={handleInput}
-              required
-            >
-              <option value="">Select contact...</option>
-              {contacts.map(c => (
-                <option key={c.id} value={c.id}>{c.name}</option>
-              ))}
-            </select>
-          </label>
-          {/* Notes */}
-          <label>Notes
-            <textarea
-              name="notes"
-              value={form.notes}
-              onChange={handleInput}
-              rows={3}
-              maxLength={300}
-              style={{ resize: "vertical" }}
+            </label>
+          </>
+        ) : (
+          <>
+            <label>Username
+              <input
+                name="username"
+                type="text"
+                value={form.username}
+                onChange={handleInput}
+                maxLength={24}
+              />
+            </label>
+            <label>Login Password
+              <input
+                name="loginPassword"
+                type="password"
+                value={form.loginPassword}
+                onChange={handleInput}
+                minLength={4}
+                maxLength={30}
+                autoComplete="new-password"
+              />
+            </label>
+            <label>Confirm Password
+              <input
+                type="password"
+                value={confirm}
+                onChange={e => setConfirm(e.target.value)}
+                minLength={4}
+                maxLength={30}
+                autoComplete="new-password"
+                required
+              />
+              {confirm && !passValid && (
+                <span style={{ color: "#b40000", fontSize: 13 }}>
+                  Passwords do not match.
+                </span>
+              )}
+            </label>
+          </>
+        )}
+        {/* Contact */}
+        <label>Contact
+          <select
+            name="contact"
+            value={form.contact}
+            onChange={handleInput}
+            required
+          >
+            <option value="">Select contact...</option>
+            {contacts.map(c => (
+              <option key={c.id} value={c.id}>{c.name}</option>
+            ))}
+          </select>
+        </label>
+        {/* Notes */}
+        <label>Notes
+          <textarea
+            name="notes"
+            value={form.notes}
+            onChange={handleInput}
+            rows={3}
+            maxLength={300}
+            style={{ resize: "vertical" }}
+          />
+        </label>
+        {/* Image */}
+        <label>Device Image
+          {isMobile() ? (
+            <input
+              ref={fileInput}
+              name="image"
+              type="file"
+              accept="image/*"
+              capture="environment"
+              onChange={handleImage}
             />
-          </label>
-          {/* Image */}
-          <label>Device Image
-            {isMobile() ? (
-              <input
-                ref={fileInput}
-                name="image"
-                type="file"
-                accept="image/*"
-                capture="environment"
-                onChange={handleImage}
-              />
-            ) : (
-              <input
-                ref={fileInput}
-                name="image"
-                type="file"
-                accept="image/*"
-                onChange={handleImage}
-              />
-            )}
-            {form.imageUrl && (
-              <img
-                src={form.imageUrl}
-                alt="Device"
-                style={{
-                  width: 80, height: 80, objectFit: "cover",
-                  display: "block", margin: "10px 0", borderRadius: 8
-                }}
-              />
-            )}
-          </label>
-          <div style={{ marginTop: 15, display: "flex", gap: 10 }}>
-            <button
-              type="submit"
-              className="btn"
-              disabled={uploading || (confirm && !passValid)}
-              style={{ background: "#2a0516", color: "#fff", flex: 1 }}
-            >
-              {editingId ? "Update" : "Add"}
-            </button>
-            {editingId && (
-              <button
-                type="button"
-                className="btn"
-                style={{ background: "#9a1818", color: "#fff" }}
-                onClick={handleDelete}
-              >
-                Delete
-              </button>
-            )}
+          ) : (
+            <input
+              ref={fileInput}
+              name="image"
+              type="file"
+              accept="image/*"
+              onChange={handleImage}
+            />
+          )}
+          {form.imageUrl && (
+            <img
+              src={form.imageUrl}
+              alt="Device"
+              style={{
+                width: 80, height: 80, objectFit: "cover",
+                display: "block", margin: "10px 0", borderRadius: 8
+              }}
+            />
+          )}
+        </label>
+        <div style={{ marginTop: 15, display: "flex", gap: 10 }}>
+          <button
+            type="submit"
+            className="btn"
+            disabled={uploading || (confirm && !passValid)}
+            style={{ background: "#2a0516", color: "#fff", flex: 1 }}
+          >
+            {editingId ? "Update" : "Add"}
+          </button>
+          {editingId && (
             <button
               type="button"
               className="btn"
-              style={{ background: "#ccc", color: "#222" }}
-              onClick={closeForm}
+              style={{ background: "#9a1818", color: "#fff" }}
+              onClick={handleDelete}
             >
-              Cancel
+              Delete
             </button>
-          </div>
-        </form>
-      </div>
+          )}
+          <button
+            type="button"
+            className="btn"
+            style={{ background: "#ccc", color: "#222" }}
+            onClick={closeForm}
+          >
+            Cancel
+          </button>
+        </div>
+      </form>
     );
   }
 
@@ -474,69 +472,67 @@ export default function Devices({ user }) {
         )}
       </div>
       {showForm && (
-  <div className="modal-overlay">
-    <div className="device-modal-box">
-      {renderForm()}
-    </div>
-  </div>
-)}
-
-<style>{`
-  .modal-overlay {
-    position: fixed;
-    left: 0; top: 0; right: 0; bottom: 0;
-    background: #26192679;
-    z-index: 1202;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-  }
-  .device-modal-box {
-    background: #fff;
-    border-radius: 18px;
-    padding: 20px;
-    max-width: 480px;
-    width: 96vw;
-    box-shadow: 0 8px 36px 0 #2a05162a;
-    position: relative;
-    display: flex;
-    flex-direction: column;
-    gap: 14px;
-    max-height: 96vh;
-    overflow-y: auto;
-  }
-  .device-form {
-    width: 100%;
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-  }
-  .device-form label {
-    display: block;
-    margin-bottom: 12px;
-    font-weight: 500;
-  }
-  .device-form input, .device-form select, .device-form textarea {
-    width: 100%;
-    margin-top: 5px;
-    margin-bottom: 6px;
-    border: 1px solid #cdbad7;
-    border-radius: 6px;
-    padding: 7px 9px;
-    font-size: 1em;
-    background: #fff;
-  }
-  .device-form textarea { min-height: 38px; }
-  .device-form .btn {
-    border: none;
-    border-radius: 5px;
-    padding: 9px 15px;
-    font-weight: 600;
-    cursor: pointer;
-    margin-right: 3px;
-  }
-`}</style>
-
+        <div className="modal-overlay">
+          <div className="device-modal-box">
+            {renderForm()}
+          </div>
+        </div>
+      )}
+      <style>{`
+        .modal-overlay {
+          position: fixed;
+          left: 0; top: 0; right: 0; bottom: 0;
+          background: #26192679;
+          z-index: 1202;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+        }
+        .device-modal-box {
+          background: #fff;
+          border-radius: 18px;
+          padding: 20px;
+          max-width: 480px;
+          width: 96vw;
+          box-shadow: 0 8px 36px 0 #2a05162a;
+          position: relative;
+          display: flex;
+          flex-direction: column;
+          gap: 14px;
+          max-height: 96vh;
+          overflow-y: auto;
+        }
+        .device-form {
+          width: 100%;
+          display: flex;
+          flex-direction: column;
+          gap: 10px;
+        }
+        .device-form label {
+          display: block;
+          margin-bottom: 12px;
+          font-weight: 500;
+        }
+        .device-form input, .device-form select, .device-form textarea {
+          width: 100%;
+          margin-top: 5px;
+          margin-bottom: 6px;
+          border: 1px solid #cdbad7;
+          border-radius: 6px;
+          padding: 7px 9px;
+          font-size: 1em;
+          background: #fff;
+        }
+        .device-form textarea { min-height: 38px; }
+        .device-form .btn {
+          border: none;
+          border-radius: 5px;
+          padding: 9px 15px;
+          font-weight: 600;
+          cursor: pointer;
+          margin-right: 3px;
+        }
+      `}</style>
     </div>
   );
 }
