@@ -7,6 +7,7 @@ import Homepage from "./components/Homepage";
 import Contacts from "./components/Contacts";
 import Belongings from "./components/Belongings";
 import OrganDonation from "./components/OrganDonation";
+import Devices from "./components/Devices";
 import './App.css';
 
 
@@ -47,6 +48,7 @@ function App() {
             <Route path="/" element={<Homepage />} />
             {/* Vaults */}
             <Route path="/vaults/digital-platforms" element={<Placeholder title="Digital Platforms" />} />
+            <Route path="/vaults/devices" element={<Devices user={user} />} />
             {/* Messages */}
             <Route path="/messages/personal-messages" element={<PersonalMessages user={user} />} />
             <Route path="/messages/last-goodbyes" element={<Placeholder title="Last Goodbyes" />} />
