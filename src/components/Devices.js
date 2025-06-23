@@ -476,7 +476,9 @@ export default function Devices({ user }) {
       {showForm && (
   <div className="modal-overlay">
     <div className="device-modal-box">
-      {renderForm()}
+      <form className="device-form" onSubmit={handleSubmit}>
+        {/* ...your fields here... */}
+      </form>
     </div>
   </div>
 )}
@@ -501,9 +503,14 @@ export default function Devices({ user }) {
     display: flex;
     flex-direction: column;
     gap: 14px;
-    /* Extra for mobile scroll on long forms */
     max-height: 96vh;
     overflow-y: auto;
+  }
+  .device-form {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
   }
   .device-form label {
     display: block;
@@ -530,6 +537,7 @@ export default function Devices({ user }) {
     margin-right: 3px;
   }
 `}</style>
+
     </div>
   );
 }
