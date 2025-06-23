@@ -473,43 +473,60 @@ export default function Devices({ user }) {
           </div>
         )}
       </div>
-      {showForm && renderForm()}
-      {/* Modal Overlay Styles */}
-      <style>{`
-        .modal-overlay {
-          position: fixed;
-          left: 0; top: 0; right: 0; bottom: 0;
-          background: #26192679;
-          z-index: 1202;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-        }
-        .device-form label {
-          display: block;
-          margin-bottom: 12px;
-          font-weight: 500;
-        }
-        .device-form input, .device-form select, .device-form textarea {
-          width: 100%;
-          margin-top: 5px;
-          margin-bottom: 6px;
-          border: 1px solid #cdbad7;
-          border-radius: 6px;
-          padding: 7px 9px;
-          font-size: 1em;
-          background: #fff;
-        }
-        .device-form textarea { min-height: 38px; }
-        .device-form .btn {
-          border: none;
-          border-radius: 5px;
-          padding: 9px 15px;
-          font-weight: 600;
-          cursor: pointer;
-          margin-right: 3px;
-        }
-      `}</style>
+      {showForm && (
+  <div className="modal-overlay">
+    <div className="device-modal-box">
+      {renderForm()}
+    </div>
+  </div>
+)}
+<style>{`
+  .modal-overlay {
+    position: fixed;
+    left: 0; top: 0; right: 0; bottom: 0;
+    background: #26192679;
+    z-index: 1202;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .device-modal-box {
+    background: #fff;
+    border-radius: 18px;
+    padding: 20px;
+    max-width: 480px;
+    width: 96vw;
+    box-shadow: 0 8px 36px 0 #2a05162a;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+  }
+  .device-form label {
+    display: block;
+    margin-bottom: 12px;
+    font-weight: 500;
+  }
+  .device-form input, .device-form select, .device-form textarea {
+    width: 100%;
+    margin-top: 5px;
+    margin-bottom: 6px;
+    border: 1px solid #cdbad7;
+    border-radius: 6px;
+    padding: 7px 9px;
+    font-size: 1em;
+    background: #fff;
+  }
+  .device-form textarea { min-height: 38px; }
+  .device-form .btn {
+    border: none;
+    border-radius: 5px;
+    padding: 9px 15px;
+    font-weight: 600;
+    cursor: pointer;
+    margin-right: 3px;
+  }
+`}</style>
     </div>
   );
 }
