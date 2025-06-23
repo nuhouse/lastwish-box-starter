@@ -9,6 +9,7 @@ import Belongings from "./components/Belongings";
 import OrganDonation from "./components/OrganDonation";
 import Devices from "./components/Devices";
 import FuneralPlanning from "./components/FuneralPlanning";
+import MemoryLane from "./components/MemoryLane";
 import './App.css';
 
 
@@ -59,7 +60,7 @@ function App() {
             <Route path="/legal/secure-e-will" element={<Placeholder title="Secure E-Will" />} />
             {/* Personal */}
             <Route path="/personal/funeral-planning" element={<FuneralPlanning user={user} />} />
-            <Route path="/personal/memory-lane" element={<Placeholder title="Memory Lane" />} />
+            <Route path="/personal/memory-lane" element={<MemoryLane user={user} />} />
             <Route path="/personal/belongings" element={<Belongings user={user} />} />
             {/* Proof of Life */}
             <Route path="/proof-of-life" element={<Placeholder title="Proof of Life" />} />
