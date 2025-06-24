@@ -12,6 +12,7 @@ import FuneralPlanning from "./components/FuneralPlanning";
 import MemoryLane from "./components/MemoryLane";
 import ProofOfLife from "./components/ProofOfLife";
 import Ewill from "./components/Ewill";
+import ImportantDocuments from "./components/ImportantDocuments";
 import './App.css';
 
 
@@ -58,7 +59,7 @@ function App() {
             <Route path="/messages/last-goodbyes" element={<Placeholder title="Last Goodbyes" />} />
             <Route path="/messages/videos" element={<Placeholder title="Videos" />} />
             {/* Legal */}
-            <Route path="/legal/important-documents" element={<Placeholder title="Important Documents" />} />
+            <Route path="/legal/important-documents" element={<ImportantDocuments user={user} />} />
             <Route path="/legal/secure-e-will" element={<Ewill user={user} />} />
             {/* Personal */}
             <Route path="/personal/funeral-planning" element={<FuneralPlanning user={user} />} />
