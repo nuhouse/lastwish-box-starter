@@ -10,6 +10,7 @@ import OrganDonation from "./components/OrganDonation";
 import Devices from "./components/Devices";
 import FuneralPlanning from "./components/FuneralPlanning";
 import MemoryLane from "./components/MemoryLane";
+import ProofOfLife from "./components/ProofOfLife";
 import './App.css';
 
 
@@ -63,7 +64,7 @@ function App() {
             <Route path="/personal/memory-lane" element={<MemoryLane user={user} />} />
             <Route path="/personal/belongings" element={<Belongings user={user} />} />
             {/* Proof of Life */}
-            <Route path="/proof-of-life" element={<Placeholder title="Proof of Life" />} />
+            <Route path="/proof-of-life" element={<ProofOfLife user={user} />} />
             {/* Contacts: Use the REAL component */}
 <Route path="/personal/organ-donation" element={<OrganDonation user={user} />} />
             <Route path="/contacts" element={<Contacts user={user} />} />
