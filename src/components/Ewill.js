@@ -55,23 +55,28 @@ export default function Ewill({ user }) {
   }
 
   // Upload new attachment
-  async function handleFileUpload(e) {
-    const file = e.target.files[0];
-    if (!file) return;
-    setFileUploading(true);
-    const fileRef = ref(storage, `ewill/${user.uid}/${Date.now()}_${file.name}`);
-    const uploadTask = uploadBytesResumable(fileRef, file);
-    await new Promise((res, rej) => uploadTask.on("state_changed", null, rej, res));
-    const url = await getDownloadURL(fileRef);
-    const newFile = { name: file.name, url, time: Date.now() };
-    const docRef = doc(db, "ewills", user.uid);
-    await updateDoc(docRef, {
-      files: arrayUnion(newFile)
-    });
-    setFiles(f => [...f, newFile]);
-    setFileUploading(false);
-    if (fileInput.current) fileInput.current.value = "";
-  }
+async function handleFileUpload(e) {
+  const file = e.target.files[0];
+  if (!file) return;
+  setFileUploading(true);
+  const fileRef = ref(storage, `ewill/${user.uid}/${Date.now()}_${file.name}`);
+  const uploadTask = uploadBytesResumable(fileRef, file);
+  await new Promise((res, rej) => uploadTask.on("state_changed", null, rej, res));
+  const url = await getDownloadURL(fileRef);
+  const newFile = { name: file.name, url, time: Date.now() };
+  const docRef = doc(db, "ewills", user.uid);
+
+  // Make sure the doc exists (setDoc with merge always works, creates if missing)
+  await setDoc(docRef, {}, { merge: true }); // No fields needed, just ensures existence
+
+  await updateDoc(docRef, {
+    files: arrayUnion(newFile)
+  });
+  setFiles(f => [...f, newFile]);
+  setFileUploading(false);
+  if (fileInput.current) fileInput.current.value = "";
+}
+
 
   // Delete attachment
   async function handleDeleteFile(f) {
