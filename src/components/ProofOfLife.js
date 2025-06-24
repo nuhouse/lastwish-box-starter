@@ -372,6 +372,147 @@ export default function ProofOfLife({ user }) {
       {showForm && renderForm()}
       {preview && <ProofPreview proof={preview} onClose={() => setPreview(null)} />}
       {/* (The same CSS styling block as in the previous answer—paste it in for modern style) */}
+    <style>{`
+        .pol-root {
+          max-width: 700px;
+          margin: 0 auto;
+          padding: 32px 12px 48px 12px;
+        }
+        .pol-add-btn {
+          margin-bottom: 28px;
+          font-size: 1.12em;
+        }
+        .pol-grid {
+          display: grid;
+          grid-template-columns: repeat(auto-fit, minmax(270px, 1fr));
+          gap: 26px;
+        }
+        .pol-card {
+          background: #fff;
+          border-radius: 18px;
+          box-shadow: 0 4px 22px 0 #2a051613;
+          padding: 19px 18px 17px 15px;
+          cursor: pointer;
+          border: 1.5px solid #ece1ec;
+          min-height: 118px;
+          transition: box-shadow 0.13s, border 0.13s, transform 0.13s;
+          position: relative;
+          display: flex;
+          align-items: flex-start;
+          gap: 12px;
+        }
+        .pol-card:hover {
+          box-shadow: 0 8px 30px 0 #c189b336;
+          transform: translateY(-2px) scale(1.013);
+          border: 1.5px solid #dab0f1;
+        }
+        .pol-icon {
+          font-size: 2.05em;
+          margin-top: 4px;
+        }
+        .pol-info {
+          flex: 1; min-width: 0;
+        }
+        .pol-date {
+          font-size: 15px;
+          color: #927ba1;
+          margin-bottom: 4px;
+        }
+        .pol-note {
+          font-size: 16px;
+          color: #654e7a;
+          margin-bottom: 7px;
+          font-weight: 500;
+        }
+        .pol-type {
+          font-size: 13px;
+          color: #8cade1;
+          margin-bottom: 3px;
+          text-transform: capitalize;
+        }
+        .pol-actions {
+          margin-top: 11px;
+          display: flex;
+          gap: 8px;
+        }
+        .btn-main {
+          background: linear-gradient(90deg, #2a0516 70%, #f15822 120%);
+          color: #fff;
+          border: none;
+          border-radius: 11px;
+          font-size: 1em;
+          font-weight: 600;
+          padding: 7px 22px;
+          cursor: pointer;
+          transition: background 0.15s, box-shadow 0.15s;
+          box-shadow: 0 2px 10px #2a051629;
+        }
+        .btn-main:disabled, .btn-main[aria-disabled="true"] {
+          background: #ccc;
+          color: #fff;
+          cursor: not-allowed;
+        }
+        .btn-main:hover:not(:disabled) {
+          background: linear-gradient(90deg, #f15822 40%, #980000 100%);
+        }
+        .btn-delete {
+          background: #980000;
+          color: #fff;
+          border: none;
+          border-radius: 11px;
+          font-size: 1em;
+          font-weight: 500;
+          padding: 7px 20px;
+          cursor: pointer;
+          transition: background 0.15s;
+        }
+        .btn-delete:hover {
+          background: #f15822;
+        }
+        .btn-cancel {
+          background: #657899;
+          color: #fff;
+          border: none;
+          border-radius: 11px;
+          font-size: 1em;
+          font-weight: 500;
+          padding: 7px 18px;
+          cursor: pointer;
+          transition: background 0.12s;
+        }
+        .btn-cancel:hover {
+          background: #b4c9f1;
+          color: #2a0516;
+        }
+        .pol-modal-bg {
+          position: fixed; left: 0; top: 0; right: 0; bottom: 0;
+          background: #2a0516bb; z-index: 2202;
+          display: flex; align-items: center; justify-content: center;
+        }
+        .pol-modal, .pol-form {
+          background: #fff;
+          border-radius: 19px;
+          box-shadow: 0 12px 38px 0 #2a051629;
+          padding: 36px 23px 18px 23px;
+          min-width: 320px; max-width: 420px; width: 98vw;
+          max-height: 96vh; overflow-y: auto;
+          position: relative;
+        }
+        .pol-form input, .pol-form select, .pol-form textarea {
+          width: 100%; border: 1.5px solid #bfa4c4; border-radius: 9px;
+          padding: 10px 12px; font-size: 1em; background: #fcfafd; margin-bottom: 7px;
+        }
+        .pol-form textarea { min-height: 48px; font-family: inherit; }
+        .pol-close {
+          position: absolute; top: 13px; right: 16px; font-size: 2.2rem; background: none;
+          border: none; color: #c39; cursor: pointer; z-index: 10;
+        }
+        @media (max-width: 700px) {
+          .pol-root { padding: 7vw 1vw; }
+          .pol-grid { grid-template-columns: 1fr; gap: 15px; }
+          .pol-modal, .pol-form { min-width: 0; max-width: 97vw; }
+        }
+      `}</style>
     </div>
   );
 }
