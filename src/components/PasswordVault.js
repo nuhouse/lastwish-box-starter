@@ -1,298 +1,324 @@
 import React, { useState, useEffect, useRef } from "react";
 import { db } from "../firebase";
 import {
-  collection, addDoc, query, where, orderBy, onSnapshot, updateDoc, deleteDoc, doc, serverTimestamp
+  doc, getDoc, setDoc, updateDoc, arrayUnion, arrayRemove
 } from "firebase/firestore";
-import CryptoJS from "crypto-js";
 
-// Helper for blank password entry
-function defaultForm(user) {
-  return {
-    uid: user?.uid || "",
-    label: "",
-    username: "",
-    encrypted: "",
-    created: null
-  };
+// -- Crypto helpers: browser built-in SubtleCrypto (no libraries needed!)
+async function digestMsg(msg) {
+  const enc = new TextEncoder().encode(msg);
+  const hash = await window.crypto.subtle.digest("SHA-256", enc);
+  return btoa(String.fromCharCode(...new Uint8Array(hash)));
+}
+async function getKey(pw) {
+  return window.crypto.subtle.importKey(
+    "raw", new TextEncoder().encode(pw), { name: "AES-GCM" }, false, ["encrypt", "decrypt"]
+  );
+}
+async function encrypt(text, pw) {
+  const iv = window.crypto.getRandomValues(new Uint8Array(12));
+  const key = await getKey(pw);
+  const enc = new TextEncoder().encode(text);
+  const ct = await window.crypto.subtle.encrypt({ name: "AES-GCM", iv }, key, enc);
+  return btoa(String.fromCharCode(...iv) + String.fromCharCode(...new Uint8Array(ct)));
+}
+async function decrypt(b64, pw) {
+  const bin = atob(b64);
+  const iv = Uint8Array.from(bin.slice(0, 12), c => c.charCodeAt(0));
+  const ct = Uint8Array.from(bin.slice(12), c => c.charCodeAt(0));
+  const key = await getKey(pw);
+  const dec = await window.crypto.subtle.decrypt({ name: "AES-GCM", iv }, key, ct);
+  return new TextDecoder().decode(dec);
 }
 
 export default function PasswordVault({ user }) {
-  const [passwords, setPasswords] = useState([]);
-  const [showForm, setShowForm] = useState(false);
-  const [form, setForm] = useState(defaultForm(user));
-  const [editingId, setEditingId] = useState(null);
+  const [state, setState] = useState("loading"); // loading, setup, unlock, unlocked
   const [masterPw, setMasterPw] = useState("");
-  const [masterPwInput, setMasterPwInput] = useState("");
-  const [isUnlocked, setIsUnlocked] = useState(false);
-  const [uploading, setUploading] = useState(false);
-  const [preview, setPreview] = useState(null);
-  const pwInput = useRef();
+  const [masterPw2, setMasterPw2] = useState("");
+  const [inputPw, setInputPw] = useState("");
+  const [vault, setVault] = useState([]);
+  const [testVal, setTestVal] = useState("");
+  const [error, setError] = useState("");
+  const [showAdd, setShowAdd] = useState(false);
+  const [newLabel, setNewLabel] = useState("");
+  const [newValue, setNewValue] = useState("");
+  const [showPw, setShowPw] = useState({});
+  const [copiedIdx, setCopiedIdx] = useState(null);
 
-  // Fetch passwords for this user
+  const pwInputRef = useRef();
+
+  // Load vault on mount
   useEffect(() => {
     if (!user) return;
-    const q = query(
-      collection(db, "passwordVault"),
-      where("uid", "==", user.uid),
-      orderBy("created", "desc")
-    );
-    const unsub = onSnapshot(q, snap => {
-      setPasswords(snap.docs.map(d => ({ id: d.id, ...d.data() })));
-    });
-    return unsub;
+    (async () => {
+      const vaultRef = doc(db, "passwordVault", user.uid);
+      const snap = await getDoc(vaultRef);
+      if (!snap.exists()) {
+        setState("setup");
+        setTestVal(""); // nothing in vault yet
+      } else {
+        const data = snap.data();
+        setVault(data.entries || []);
+        setTestVal(data.test || "");
+        setState("unlock");
+      }
+    })();
   }, [user]);
 
-  // UI: Enter master password (never stored)
-  function unlockVault(e) {
+  // Set master password (first time setup)
+  async function handleSetMasterPw(e) {
     e.preventDefault();
-    setMasterPw(masterPwInput);
-    setIsUnlocked(true);
-    setMasterPwInput("");
-  }
-
-  function lockVault() {
-    setMasterPw("");
-    setIsUnlocked(false);
-    setPreview(null);
-  }
-
-  // Show form for new/edit password
-  function openForm(entry = null) {
-    setShowForm(true);
-    if (entry) {
-      // Decrypt for editing
-      let password = "";
-      try {
-        const bytes = CryptoJS.AES.decrypt(entry.encrypted, masterPw);
-        password = bytes.toString(CryptoJS.enc.Utf8);
-      } catch (err) {
-        password = "";
-      }
-      setForm({
-        uid: user.uid,
-        label: entry.label,
-        username: entry.username,
-        encrypted: entry.encrypted,
-        password,
-        created: entry.created
+    setError("");
+    if (!masterPw || masterPw.length < 8) return setError("Password must be at least 8 characters.");
+    if (masterPw !== masterPw2) return setError("Passwords do not match.");
+    try {
+      const testEncrypted = await encrypt("vault_test", masterPw);
+      await setDoc(doc(db, "passwordVault", user.uid), {
+        test: testEncrypted,
+        entries: []
       });
-      setEditingId(entry.id);
-      if (pwInput.current) pwInput.current.value = password;
-    } else {
-      setForm(defaultForm(user));
-      setEditingId(null);
-      if (pwInput.current) pwInput.current.value = "";
+      setTestVal(testEncrypted);
+      setVault([]);
+      setMasterPw2("");
+      setState("unlocked");
+    } catch (e) {
+      setError("Error setting master password: " + e.message);
     }
   }
-  function closeForm() {
-    setShowForm(false);
-    setForm(defaultForm(user));
-    setEditingId(null);
-    if (pwInput.current) pwInput.current.value = "";
-  }
 
-  function handleInput(e) {
-    const { name, value } = e.target;
-    setForm(f => ({ ...f, [name]: value }));
-  }
-
-  function handlePwInput(e) {
-    setForm(f => ({ ...f, password: e.target.value }));
-  }
-
-  // Save password (encrypt before save)
-  async function handleSubmit(e) {
+  // Unlock vault
+  async function handleUnlock(e) {
     e.preventDefault();
-    setUploading(true);
+    setError("");
     try {
-      if (!form.password || !masterPw) {
-        alert("Master password and entry password required.");
-        setUploading(false);
-        return;
+      const result = await decrypt(testVal, inputPw);
+      if (result !== "vault_test") throw new Error("Wrong password");
+      setMasterPw(inputPw);
+      setState("unlocked");
+      setInputPw("");
+    } catch (e) {
+      setError("Incorrect master password.");
+      setInputPw("");
+      if (pwInputRef.current) pwInputRef.current.focus();
+    }
+  }
+
+  // Add new password
+  async function handleAdd(e) {
+    e.preventDefault();
+    setError("");
+    if (!newLabel || !newValue) return setError("Fill in all fields.");
+    try {
+      const encrypted = await encrypt(newValue, masterPw);
+      const newEntry = { label: newLabel, value: encrypted, time: Date.now() };
+      await updateDoc(doc(db, "passwordVault", user.uid), {
+        entries: arrayUnion(newEntry)
+      });
+      setVault(vault => [...vault, newEntry]);
+      setNewLabel(""); setNewValue(""); setShowAdd(false);
+    } catch (e) {
+      setError("Error saving: " + e.message);
+    }
+  }
+
+  // Reveal or hide password
+  async function handleShowPw(idx) {
+    if (showPw[idx]) {
+      setShowPw(pw => ({ ...pw, [idx]: false }));
+    } else {
+      try {
+        const val = await decrypt(vault[idx].value, masterPw);
+        setShowPw(pw => ({ ...pw, [idx]: val }));
+      } catch (e) {
+        setShowPw(pw => ({ ...pw, [idx]: "Error" }));
       }
-      const encrypted = CryptoJS.AES.encrypt(form.password, masterPw).toString();
-      const payload = {
-        uid: user.uid,
-        label: form.label,
-        username: form.username,
-        encrypted,
-        created: editingId ? form.created : serverTimestamp(),
-        lastUpdated: serverTimestamp(),
-      };
-      if (editingId) {
-        await updateDoc(doc(db, "passwordVault", editingId), payload);
-      } else {
-        await addDoc(collection(db, "passwordVault"), payload);
-      }
-      closeForm();
-    } catch (err) {
-      alert("Failed to save: " + err.message);
     }
-    setUploading(false);
   }
 
-  // Delete password
-  async function handleDelete(id) {
-    if (!window.confirm("Delete this password entry?")) return;
+  // Copy password to clipboard
+  async function handleCopy(idx) {
+    if (!showPw[idx]) await handleShowPw(idx);
     try {
-      await deleteDoc(doc(db, "passwordVault", id));
-    } catch (err) {
-      alert("Failed to delete: " + err.message);
-    }
+      await navigator.clipboard.writeText(showPw[idx] || "");
+      setCopiedIdx(idx);
+      setTimeout(() => setCopiedIdx(null), 1100);
+    } catch (e) {}
   }
 
-  // Reveal password (on click)
-  function decryptPassword(entry) {
+  // Delete password entry
+  async function handleDelete(idx) {
+    const entry = vault[idx];
+    if (!window.confirm("Delete this password?")) return;
     try {
-      const bytes = CryptoJS.AES.decrypt(entry.encrypted, masterPw);
-      return bytes.toString(CryptoJS.enc.Utf8);
-    } catch {
-      return "";
+      await updateDoc(doc(db, "passwordVault", user.uid), {
+        entries: arrayRemove(entry)
+      });
+      setVault(vault => vault.filter((_, i) => i !== idx));
+      setShowPw(pw => {
+        const cpy = { ...pw }; delete cpy[idx]; return cpy;
+      });
+    } catch (e) {
+      setError("Error deleting entry: " + e.message);
     }
   }
 
-  // Filtered list/search
-  const [search, setSearch] = useState("");
-  const filtered = passwords.filter(
-    p =>
-      p.label.toLowerCase().includes(search.toLowerCase()) ||
-      p.username.toLowerCase().includes(search.toLowerCase())
+  // Vault reset (danger!)
+  async function handleResetVault() {
+    if (!window.confirm("This will delete all stored passwords and cannot be undone. Continue?")) return;
+    try {
+      await setDoc(doc(db, "passwordVault", user.uid), {
+        test: "",
+        entries: []
+      });
+      setVault([]);
+      setTestVal("");
+      setMasterPw("");
+      setMasterPw2("");
+      setState("setup");
+    } catch (e) {
+      setError("Error resetting vault: " + e.message);
+    }
+  }
+
+  // --- UI ---
+
+  if (state === "loading") return <div style={{ padding: 36 }}>Loading vault...</div>;
+
+  // SETUP: First time
+  if (state === "setup") return (
+    <div className="card" style={{ maxWidth: 410, margin: "40px auto" }}>
+      <h2>Password Vault</h2>
+      <p>Set a strong master password (minimum 8 characters). <b>Do not lose this password!</b> You will need it every time you access your vault.</p>
+      <form onSubmit={handleSetMasterPw}>
+        <input
+          type="password"
+          className="input"
+          placeholder="Master Password"
+          value={masterPw}
+          onChange={e => setMasterPw(e.target.value)}
+          required
+        />
+        <input
+          type="password"
+          className="input"
+          placeholder="Confirm Master Password"
+          value={masterPw2}
+          onChange={e => setMasterPw2(e.target.value)}
+          required
+        />
+        <button className="btn-main" type="submit" style={{ width: "100%", marginTop: 16 }}>Set Password</button>
+      </form>
+      {error && <div style={{ color: "#980000", marginTop: 12 }}>{error}</div>}
+    </div>
   );
 
-  // Main UI
-  if (!isUnlocked) {
-    return (
-      <div className="pol-root" style={{ maxWidth: 400, margin: "auto" }}>
-        <h2>Password Vault</h2>
-        <div className="card" style={{ marginTop: 32 }}>
-          <form onSubmit={unlockVault}>
-            <div style={{ marginBottom: 10 }}>
-              <label>Enter your master password to unlock vault:</label>
-              <input
-                type="password"
-                value={masterPwInput}
-                onChange={e => setMasterPwInput(e.target.value)}
-                required
-                style={{ marginTop: 8, marginBottom: 15 }}
-              />
-            </div>
-            <button className="btn-main" type="submit" style={{ width: "100%" }}>
-              Unlock Vault
-            </button>
-          </form>
-        </div>
-        <div style={{ marginTop: 26, color: "#657899", fontSize: 15 }}>
-          <b>Note:</b> Only you know your master password. Lost it? The vault can’t be recovered, even by admins.
-        </div>
-      </div>
-    );
-  }
-
-  return (
-    <div className="pol-root">
+  // UNLOCK: User must enter master password
+  if (state === "unlock") return (
+    <div className="card" style={{ maxWidth: 410, margin: "40px auto" }}>
       <h2>Password Vault</h2>
-      <div style={{
-        background: "#e8eaf6", color: "#2a0516", borderRadius: 9, padding: 14, marginBottom: 15, fontSize: 15, maxWidth: 490
-      }}>
-        <b>Security Notice:</b> Passwords are encrypted locally with your master password. <br />
-        <b>Keep your master password safe!</b> If you forget it, your vault cannot be decrypted or recovered.
-      </div>
-      <div style={{ display: "flex", gap: 14, alignItems: "center", marginBottom: 18 }}>
-        <button className="btn-main" onClick={() => openForm()} >+ Add Password</button>
-        <button className="btn-cancel" onClick={lockVault} >Lock Vault</button>
+      <p>Enter your master password to unlock your vault.</p>
+      <form onSubmit={handleUnlock}>
         <input
-          type="text"
-          placeholder="Search by label or username"
-          value={search}
-          onChange={e => setSearch(e.target.value)}
-          style={{ minWidth: 180, maxWidth: 240, borderRadius: 7, border: "1.2px solid #bfa4c4", padding: 8, fontSize: "1em" }}
+          type="password"
+          className="input"
+          placeholder="Master Password"
+          value={inputPw}
+          onChange={e => setInputPw(e.target.value)}
+          ref={pwInputRef}
+          autoFocus
+          required
         />
+        <button className="btn-main" type="submit" style={{ width: "100%", marginTop: 16 }}>Unlock</button>
+      </form>
+      <button className="btn-cancel" style={{ width: "100%", marginTop: 13 }} onClick={handleResetVault}>Reset Vault</button>
+      <div style={{ color: "#980000", marginTop: 10 }}>{error}</div>
+    </div>
+  );
+
+  // UNLOCKED: Show vault entries
+  return (
+    <div className="card" style={{ maxWidth: 530, margin: "40px auto" }}>
+      <h2>Password Vault</h2>
+      <div style={{ marginBottom: 18, color: "#657899" }}>
+        Your vault is securely encrypted. <b>Only you</b> know your master password. <br />
+        <button className="btn-cancel" onClick={handleResetVault} style={{ float: "right", fontSize: "0.96em" }}>Reset Vault</button>
       </div>
-      <div className="pol-grid">
-        {filtered.length === 0 ? (
-          <div style={{ color: "#a697b8", padding: 30, textAlign: "center" }}>No passwords saved yet.</div>
-        ) : (
-          filtered.map(entry =>
-            <div className="card" key={entry.id} style={{ minHeight: 120, position: "relative" }}>
-              <div style={{ fontWeight: 600, fontSize: 17, marginBottom: 3 }}>{entry.label}</div>
-              <div style={{ color: "#657899", fontSize: 15 }}>{entry.username}</div>
-              <div style={{ color: "#b9aac3", fontSize: 13, marginBottom: 4 }}>
-                {entry.created?.toDate ? entry.created.toDate().toLocaleString() : ""}
-              </div>
-              <div style={{ display: "flex", gap: 7, alignItems: "center", marginBottom: 6 }}>
-                <span style={{ color: "#980000", fontWeight: 500 }}>
-                  {preview === entry.id
-                    ? decryptPassword(entry)
-                    : "••••••••"}
-                </span>
+      {vault.length === 0 && <div style={{ marginBottom: 22, color: "#8cade1" }}>No passwords saved yet.</div>}
+      <table style={{ width: "100%", marginBottom: 23 }}>
+        <thead>
+          <tr style={{ color: "#2a0516" }}>
+            <th style={{ textAlign: "left" }}>Label</th>
+            <th style={{ textAlign: "center" }}>Password</th>
+            <th style={{ textAlign: "center" }}>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {vault.map((entry, idx) => (
+            <tr key={idx}>
+              <td style={{ fontWeight: 500 }}>{entry.label}</td>
+              <td style={{ textAlign: "center" }}>
                 <button
                   className="btn-main"
-                  style={{ padding: "2px 14px", fontSize: "0.98em" }}
-                  onClick={() => setPreview(preview === entry.id ? null : entry.id)}
-                  tabIndex={-1}
+                  style={{ minWidth: 54, fontSize: "0.97em", padding: "5px 12px" }}
+                  onClick={() => handleShowPw(idx)}
+                  type="button"
                 >
-                  {preview === entry.id ? "Hide" : "Show"}
+                  {showPw[idx] ? (
+                    <span style={{ letterSpacing: 1 }}>
+                      {showPw[idx]}
+                    </span>
+                  ) : "Show"}
+                </button>
+              </td>
+              <td style={{ textAlign: "center" }}>
+                <button
+                  className="btn-main"
+                  style={{ marginRight: 6, fontSize: "0.93em", padding: "5px 11px" }}
+                  onClick={() => handleCopy(idx)}
+                  type="button"
+                  disabled={!showPw[idx]}
+                >
+                  {copiedIdx === idx ? "Copied!" : "Copy"}
                 </button>
                 <button
-                  className="btn-cancel"
-                  style={{ padding: "2px 14px", fontSize: "0.98em" }}
-                  onClick={() => openForm(entry)}
-                  tabIndex={-1}
-                >Edit</button>
-                <button
                   className="btn-danger"
-                  style={{ padding: "2px 14px", fontSize: "0.98em" }}
-                  onClick={() => handleDelete(entry.id)}
-                  tabIndex={-1}
-                >Delete</button>
-              </div>
-            </div>
-          )
-        )}
-      </div>
-      {/* Modal for Add/Edit */}
-      {showForm && (
-        <div className="pol-modal-bg">
-          <form className="pol-form" onSubmit={handleSubmit}>
-            <h3 style={{ marginBottom: 13, color: "#2a0516" }}>
-              {editingId ? "Edit Password" : "Add New Password"}
-            </h3>
-            <label>Label</label>
-            <input
-              type="text"
-              name="label"
-              value={form.label}
-              onChange={handleInput}
-              placeholder="E.g. Gmail Main, Bank, Netflix"
-              required
-            />
-            <label>Username/Email</label>
-            <input
-              type="text"
-              name="username"
-              value={form.username}
-              onChange={handleInput}
-              placeholder="Login email or username"
-              required
-            />
-            <label>Password</label>
-            <input
-              type="password"
-              name="password"
-              ref={pwInput}
-              value={form.password || ""}
-              onChange={handlePwInput}
-              required
-            />
-            <div style={{ display: "flex", gap: 9, marginTop: 11 }}>
-              <button className="btn-main" type="submit" disabled={uploading} style={{ flex: 1 }}>
-                {editingId ? "Update" : "Add"}
-              </button>
-              <button type="button" className="btn-cancel" onClick={closeForm}>Cancel</button>
-            </div>
-          </form>
-        </div>
+                  style={{ fontSize: "0.93em", padding: "5px 11px" }}
+                  onClick={() => handleDelete(idx)}
+                  type="button"
+                >
+                  Delete
+                </button>
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+      {/* Add new password form */}
+      {showAdd ? (
+        <form onSubmit={handleAdd} style={{ marginBottom: 17, marginTop: 8 }}>
+          <input
+            type="text"
+            className="input"
+            placeholder="Label (e.g. Facebook)"
+            value={newLabel}
+            onChange={e => setNewLabel(e.target.value)}
+            required
+          />
+          <input
+            type="text"
+            className="input"
+            placeholder="Password"
+            value={newValue}
+            onChange={e => setNewValue(e.target.value)}
+            required
+          />
+          <button className="btn-main" type="submit" style={{ marginTop: 3 }}>Add</button>
+          <button className="btn-cancel" type="button" style={{ marginLeft: 11 }} onClick={() => setShowAdd(false)}>Cancel</button>
+        </form>
+      ) : (
+        <button className="btn-main" style={{ marginBottom: 11 }} onClick={() => setShowAdd(true)}>+ Add New Password</button>
       )}
+      {error && <div style={{ color: "#980000", marginTop: 12 }}>{error}</div>}
     </div>
   );
 }
