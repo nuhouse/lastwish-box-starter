@@ -62,7 +62,7 @@ function App() {
   <Route path="/messages/personal-messages" element={<PersonalMessages user={user} />} />
   <Route path="/messages/last-goodbyes" element={<Placeholder title="Last Goodbyes" />} />
   <Route path="/messages/videos" element={<Placeholder title="Videos" />} />
-  <Route path="/messages/legacy-message" element={<LegacyMessage user={user} masterPw={masterPw} />} />
+  <Route path="/messages/legacy-message" element={<LegacyMessage user={user} />} />
   {/* Legal */}
   <Route path="/legal/important-documents" element={<ImportantDocuments user={user} />} />
   <Route path="/legal/secure-e-will" element={<Ewill user={user} />} />
