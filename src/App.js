@@ -11,6 +11,7 @@ import Devices from "./components/Devices";
 import FuneralPlanning from "./components/FuneralPlanning";
 import MemoryLane from "./components/MemoryLane";
 import ProofOfLife from "./components/ProofOfLife";
+import Ewill from "./components/Ewill";
 import './App.css';
 
 
@@ -58,7 +59,7 @@ function App() {
             <Route path="/messages/videos" element={<Placeholder title="Videos" />} />
             {/* Legal */}
             <Route path="/legal/important-documents" element={<Placeholder title="Important Documents" />} />
-            <Route path="/legal/secure-e-will" element={<Placeholder title="Secure E-Will" />} />
+            <Route path="/legal/secure-e-will" element={<Ewill user={user} />} />
             {/* Personal */}
             <Route path="/personal/funeral-planning" element={<FuneralPlanning user={user} />} />
             <Route path="/personal/memory-lane" element={<MemoryLane user={user} />} />
