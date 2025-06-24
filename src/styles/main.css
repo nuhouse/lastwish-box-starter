@@ -60,3 +60,113 @@ body {
     padding: 0.5rem;
   }
 }
+
+
+//NEW CSS STYLE
+/* main.css: Master styles for LastWish Box */
+
+:root {
+  --brand-main: #2a0516;
+  --brand-dark: #645155;
+  --brand-danger: #980000;
+  --brand-accent: #f15822;
+  --brand-info: #8cade1;
+  --brand-muted: #657899;
+}
+
+/* Modern Button Styles */
+.btn-main {
+  background: linear-gradient(90deg, var(--brand-main) 70%, var(--brand-accent) 120%);
+  color: #fff;
+  border: none;
+  border-radius: 11px;
+  font-size: 1em;
+  font-weight: 600;
+  padding: 7px 22px;
+  cursor: pointer;
+  transition: background 0.15s, box-shadow 0.15s;
+  box-shadow: 0 2px 10px var(--brand-main)19;
+}
+
+.btn-main:disabled, .btn-main[aria-disabled="true"] {
+  background: #ccc;
+  color: #fff;
+  cursor: not-allowed;
+}
+
+.btn-main:hover:not(:disabled) {
+  background: linear-gradient(90deg, var(--brand-accent) 40%, var(--brand-danger) 100%);
+}
+
+.btn-danger {
+  background: var(--brand-danger);
+  color: #fff;
+  border: none;
+  border-radius: 11px;
+  font-size: 1em;
+  font-weight: 500;
+  padding: 7px 20px;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.btn-danger:hover {
+  background: var(--brand-accent);
+}
+
+.btn-cancel {
+  background: var(--brand-muted);
+  color: #fff;
+  border: none;
+  border-radius: 11px;
+  font-size: 1em;
+  font-weight: 500;
+  padding: 7px 18px;
+  cursor: pointer;
+  transition: background 0.12s;
+}
+
+.btn-cancel:hover {
+  background: #b4c9f1;
+  color: var(--brand-main);
+}
+
+/* Card & modal for all pages */
+.card {
+  background: #fff;
+  border-radius: 18px;
+  box-shadow: 0 4px 22px 0 var(--brand-main)13;
+  padding: 22px 24px 20px 22px;
+  margin-bottom: 18px;
+  border: 1.5px solid #ece1ec;
+  transition: box-shadow 0.13s, border 0.13s, transform 0.13s;
+  position: relative;
+}
+
+.card:hover {
+  box-shadow: 0 8px 30px 0 #c189b336;
+  transform: translateY(-2px) scale(1.013);
+  border: 1.5px solid #dab0f1;
+}
+
+/* Modern form inputs */
+input[type="text"], input[type="email"], textarea, select {
+  width: 100%;
+  border: 1.5px solid #bfa4c4;
+  border-radius: 9px;
+  padding: 10px 12px;
+  font-size: 1em;
+  background: #fcfafd;
+  margin-bottom: 7px;
+}
+
+/* For react-quill rich editor */
+.ewill-quill .ql-toolbar {
+  border-radius: 9px 9px 0 0;
+  background: #f4f2f8;
+}
+.ewill-quill .ql-container {
+  border-radius: 0 0 9px 9px;
+  min-height: 140px;
+  font-size: 1.07em;
+}
