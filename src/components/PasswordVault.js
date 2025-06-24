@@ -4,17 +4,30 @@ import {
   doc, getDoc, setDoc, updateDoc, arrayUnion, arrayRemove
 } from "firebase/firestore";
 
-// -- Crypto helpers: browser built-in SubtleCrypto (no libraries needed!)
-async function digestMsg(msg) {
-  const enc = new TextEncoder().encode(msg);
-  const hash = await window.crypto.subtle.digest("SHA-256", enc);
-  return btoa(String.fromCharCode(...new Uint8Array(hash)));
-}
+// --- Modern password-to-key using PBKDF2 (safe, always valid length)
+const PBKDF2_ITER = 100_000;
+const PBKDF2_SALT = "LastWishBoxVaultSalt"; // for production: use a per-user salt!
+
 async function getKey(pw) {
-  return window.crypto.subtle.importKey(
-    "raw", new TextEncoder().encode(pw), { name: "AES-GCM" }, false, ["encrypt", "decrypt"]
+  const enc = new TextEncoder();
+  const keyMaterial = await window.crypto.subtle.importKey(
+    "raw", enc.encode(pw), "PBKDF2", false, ["deriveKey"]
+  );
+  return window.crypto.subtle.deriveKey(
+    {
+      name: "PBKDF2",
+      salt: enc.encode(PBKDF2_SALT),
+      iterations: PBKDF2_ITER,
+      hash: "SHA-256"
+    },
+    keyMaterial,
+    { name: "AES-GCM", length: 256 },
+    false,
+    ["encrypt", "decrypt"]
   );
 }
+
+// --- encryption helpers (unchanged)
 async function encrypt(text, pw) {
   const iv = window.crypto.getRandomValues(new Uint8Array(12));
   const key = await getKey(pw);
