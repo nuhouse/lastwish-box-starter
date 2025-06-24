@@ -16,6 +16,7 @@ import ImportantDocuments from "./components/ImportantDocuments";
 import PasswordVault from "./components/PasswordVault";
 import LegacyMessage from "./components/LegacyMessage";
 import AdminDashboard from "./components/AdminDashboard";
+import DigitalPlatforms from "./components/DigitalPlatforms";
 import './App.css';
 
 
@@ -55,7 +56,7 @@ function App() {
           <Routes>
   <Route path="/" element={<Homepage />} />
   {/* Vaults */}
-  <Route path="/vaults/digital-platforms" element={<Placeholder title="Digital Platforms" />} />
+  <Route path="/vaults/digital-platforms" element={<DigitalPlatforms user={user} />} />
   <Route path="/vaults/devices" element={<Devices user={user} />} />
   <Route path="/vaults/password-vault" element={<PasswordVault user={user} />} />
   {/* Messages */}
