@@ -13,6 +13,7 @@ import MemoryLane from "./components/MemoryLane";
 import ProofOfLife from "./components/ProofOfLife";
 import Ewill from "./components/Ewill";
 import ImportantDocuments from "./components/ImportantDocuments";
+import PasswordVault from "./components/PasswordVault";
 import './App.css';
 
 
@@ -72,6 +73,7 @@ function App() {
             <Route path="/contacts" element={<Contacts user={user} />} />
             {/* Redirect unknown routes to home */}
             <Route path="*" element={<Navigate to="/" />} />
+              <Route path="/vaults/password-vault" element={<PasswordVault user={user} />} />
           </Routes>
         </div>
       </div>
