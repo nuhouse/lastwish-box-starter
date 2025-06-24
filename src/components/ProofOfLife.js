@@ -52,11 +52,24 @@ export default function ProofOfLife({ user }) {
 
   // Clean up blob URL when file changes
   useEffect(() => {
-    if (!form.file) return;
+    if (!form.file) {
+      setFileUrl(null);
+      return;
+    }
     const url = URL.createObjectURL(form.file);
     setFileUrl(url);
     return () => URL.revokeObjectURL(url);
   }, [form.file]);
+
+  // Sync srcObject for live video preview (fixes crash!)
+  useEffect(() => {
+    if (videoRef.current && recording && mediaStream && recordType === "video") {
+      videoRef.current.srcObject = mediaStream;
+    }
+    return () => {
+      if (videoRef.current) videoRef.current.srcObject = null;
+    };
+  }, [recording, mediaStream, recordType]);
 
   function openForm(proof = null) {
     setShowForm(true);
@@ -290,18 +303,8 @@ export default function ProofOfLife({ user }) {
               muted
               style={{ width: 180, marginBottom: 9, borderRadius: 10 }}
               playsInline
-              // srcObject is not a valid prop; need to set it in useEffect below
             />
           )}
-          {/* Sync srcObject for live preview */}
-          {useEffect(() => {
-            if (videoRef.current && recording && mediaStream && recordType === "video") {
-              videoRef.current.srcObject = mediaStream;
-            }
-            return () => {
-              if (videoRef.current) videoRef.current.srcObject = null;
-            };
-          }, [recording, mediaStream, recordType])}
           {recording && mediaStream && recordType === "audio" && (
             <div style={{ marginBottom: 9, color: "#8cade1", fontWeight: 500 }}>● Recording audio...</div>
           )}
@@ -371,8 +374,7 @@ export default function ProofOfLife({ user }) {
       </div>
       {showForm && renderForm()}
       {preview && <ProofPreview proof={preview} onClose={() => setPreview(null)} />}
-      {/* (The same CSS styling block as in the previous answer—paste it in for modern style) */}
-    <style>{`
+      <style>{`
         .pol-root {
           max-width: 700px;
           margin: 0 auto;
