@@ -7,6 +7,7 @@ import {
 import {
   ref, uploadBytesResumable, getDownloadURL, deleteObject
 } from "firebase/storage";
+import { FaPlayCircle } from "react-icons/fa";
 
 function defaultForm(uid) {
   return {
@@ -18,8 +19,6 @@ function defaultForm(uid) {
     created: null
   };
 }
-import { FaPlayCircle } from "react-icons/fa";
-
 
 export default function ProofOfLife({ user }) {
   const [proofs, setProofs] = useState([]);
@@ -243,20 +242,24 @@ export default function ProofOfLife({ user }) {
           </div>
           <div style={{ marginBottom: 13, fontWeight: 500 }}>{proof.note}</div>
           {proof.type === "photo" && proof.mediaUrl && (
-            <img src={proof.mediaUrl} alt="" style={{ maxWidth: 220, borderRadius: 15, margin: "10px 0" }} />
+            <img src={proof.mediaUrl} alt="" style={{ maxWidth: 280, borderRadius: 15, margin: "10px 0" }} />
           )}
           {proof.type === "video" && proof.mediaUrl && (
-            <video src={proof.mediaUrl} controls style={{ maxWidth: 320, borderRadius: 15, margin: "10px 0" }} />
+            <video src={proof.mediaUrl} controls style={{ width: "100%", maxWidth: 420, borderRadius: 15, margin: "10px 0" }} />
           )}
           {proof.type === "audio" && proof.mediaUrl && (
-            <audio src={proof.mediaUrl} controls style={{ width: 250, margin: "10px 0" }} />
+            <audio src={proof.mediaUrl} controls style={{ width: 350, margin: "10px 0" }} />
           )}
         </div>
       </div>
     );
   }
+
   function renderForm() {
     const supportsMedia = !!(navigator.mediaDevices && window.MediaRecorder);
+    // For concise preview logic
+    const previewUrl = fileUrl || form.mediaUrl;
+
     return (
       <div className="pol-modal-bg">
         <form className="pol-form" onSubmit={handleSubmit}>
@@ -303,7 +306,7 @@ export default function ProofOfLife({ user }) {
               ref={videoRef}
               autoPlay
               muted
-              style={{ width: 180, marginBottom: 9, borderRadius: 10 }}
+              style={{ width: 200, marginBottom: 9, borderRadius: 10 }}
               playsInline
             />
           )}
@@ -337,33 +340,63 @@ export default function ProofOfLife({ user }) {
               style={{ marginBottom: 9 }}
             />
           )}
-         {/* VIDEO preview (uploaded/recorded or existing from mediaUrl) */}
-{!recording && form.type === "video" && (
-  fileUrl ? (
-    <video src={fileUrl} controls style={{ width: 80, borderRadius: 7, marginBottom: 7 }} />
-  ) : form.mediaUrl ? (
-    <video src={form.mediaUrl} controls style={{ width: 80, borderRadius: 7, marginBottom: 7 }} />
-  ) : null
-)}
-
-{/* AUDIO preview (uploaded/recorded or existing from mediaUrl) */}
-{!recording && form.type === "audio" && (
-  fileUrl ? (
-    <audio src={fileUrl} controls style={{ width: 80, marginBottom: 7 }} />
-  ) : form.mediaUrl ? (
-    <audio src={form.mediaUrl} controls style={{ width: 80, marginBottom: 7 }} />
-  ) : null
-)}
-
-{/* PHOTO preview (uploaded/recorded or existing from mediaUrl) */}
-{!recording && form.type === "photo" && (
-  fileUrl ? (
-    <img src={fileUrl} alt="" style={{ width: 54, borderRadius: 7, marginBottom: 7 }} />
-  ) : form.mediaUrl ? (
-    <img src={form.mediaUrl} alt="" style={{ width: 54, borderRadius: 7, marginBottom: 7 }} />
-  ) : null
-)}
-
+          {/* Modern preview with Play button for video/audio */}
+          {!recording && form.type === "video" && previewUrl && (
+            <div
+              style={{
+                position: "relative",
+                width: 140,
+                height: 90,
+                marginBottom: 12,
+                borderRadius: 12,
+                overflow: "hidden",
+                background: "#ddd",
+                cursor: "pointer",
+                boxShadow: "0 2px 12px #0001"
+              }}
+              onClick={() => setPreview({ ...form, mediaUrl: previewUrl, type: "video", note: form.note })}
+            >
+              <video
+                src={previewUrl}
+                style={{
+                  width: "100%", height: "100%", objectFit: "cover",
+                  pointerEvents: "none"
+                }}
+                preload="metadata"
+                tabIndex={-1}
+              />
+              <div style={{
+                position: "absolute", top: "50%", left: "50%",
+                transform: "translate(-50%, -50%)",
+                fontSize: 42, color: "#fff", background: "#0007",
+                borderRadius: "50%", padding: 8
+              }}>
+                <FaPlayCircle />
+              </div>
+            </div>
+          )}
+          {/* Audio preview with play button */}
+          {!recording && form.type === "audio" && previewUrl && (
+            <div style={{ display: "flex", alignItems: "center", marginBottom: 7, gap: 10 }}>
+              <button
+                type="button"
+                className="btn-main"
+                style={{
+                  background: "#e97c13", borderRadius: "100%", width: 38, height: 38,
+                  display: "flex", alignItems: "center", justifyContent: "center", fontSize: "1.5em"
+                }}
+                onClick={() => setPreview({ ...form, mediaUrl: previewUrl, type: "audio", note: form.note })}
+                aria-label="Play audio"
+              >
+                <FaPlayCircle />
+              </button>
+              <span style={{ color: "#645155", fontSize: 14 }}>Audio ready</span>
+            </div>
+          )}
+          {/* Photo preview */}
+          {!recording && form.type === "photo" && previewUrl && (
+            <img src={previewUrl} alt="" style={{ width: 80, borderRadius: 10, marginBottom: 7, boxShadow: "0 2px 8px #0001" }} />
+          )}
           <div style={{ display: "flex", gap: 9, marginTop: 9 }}>
             <button className="btn-main" type="submit" style={{ flex: 1 }} disabled={uploading || recording}>
               {editingId ? "Update" : "Add"}
