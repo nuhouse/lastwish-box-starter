@@ -18,6 +18,8 @@ function defaultForm(uid) {
     created: null
   };
 }
+import { FaPlayCircle } from "react-icons/fa";
+
 
 export default function ProofOfLife({ user }) {
   const [proofs, setProofs] = useState([]);
