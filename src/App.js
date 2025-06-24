@@ -15,6 +15,7 @@ import Ewill from "./components/Ewill";
 import ImportantDocuments from "./components/ImportantDocuments";
 import PasswordVault from "./components/PasswordVault";
 import LegacyMessage from "./components/LegacyMessage";
+import AdminDashboard from "./components/AdminDashboard";
 import './App.css';
 
 
@@ -52,33 +53,34 @@ function App() {
             }}>Logout</button>
           </div>
           <Routes>
-            <Route path="/" element={<Homepage />} />
-            {/* Vaults */}
-            <Route path="/vaults/digital-platforms" element={<Placeholder title="Digital Platforms" />} />
-            <Route path="/vaults/devices" element={<Devices user={user} />} />
-            {/* Messages */}
-            <Route path="/messages/personal-messages" element={<PersonalMessages user={user} />} />
-            <Route path="/messages/last-goodbyes" element={<Placeholder title="Last Goodbyes" />} />
-            <Route path="/messages/videos" element={<Placeholder title="Videos" />} />
-            {/* Legal */}
-            <Route path="/legal/important-documents" element={<ImportantDocuments user={user} />} />
-            <Route path="/legal/secure-e-will" element={<Ewill user={user} />} />
-            {/* Personal */}
-            <Route path="/personal/funeral-planning" element={<FuneralPlanning user={user} />} />
-            <Route path="/personal/memory-lane" element={<MemoryLane user={user} />} />
-            <Route path="/personal/belongings" element={<Belongings user={user} />} />
-            {/* Proof of Life */}
-            <Route path="/proof-of-life" element={<ProofOfLife user={user} />} />
-            {/* Contacts: Use the REAL component */}
-<Route path="/personal/organ-donation" element={<OrganDonation user={user} />} />
-            <Route path="/contacts" element={<Contacts user={user} />} />
-            {/* Redirect unknown routes to home */}
-            <Route path="*" element={<Navigate to="/" />} />
-              <Route path="/vaults/password-vault" element={<PasswordVault user={user} />} />
-              <Route path="/messages/legacy-message" element={
-  <LegacyMessage user={user} masterPw={masterPw /* pass if you have it in app state, else pass as blank "" */} />
-} />
-          </Routes>
+  <Route path="/" element={<Homepage />} />
+  {/* Vaults */}
+  <Route path="/vaults/digital-platforms" element={<Placeholder title="Digital Platforms" />} />
+  <Route path="/vaults/devices" element={<Devices user={user} />} />
+  <Route path="/vaults/password-vault" element={<PasswordVault user={user} />} />
+  {/* Messages */}
+  <Route path="/messages/personal-messages" element={<PersonalMessages user={user} />} />
+  <Route path="/messages/last-goodbyes" element={<Placeholder title="Last Goodbyes" />} />
+  <Route path="/messages/videos" element={<Placeholder title="Videos" />} />
+  <Route path="/messages/legacy-message" element={<LegacyMessage user={user} masterPw={masterPw} />} />
+  {/* Legal */}
+  <Route path="/legal/important-documents" element={<ImportantDocuments user={user} />} />
+  <Route path="/legal/secure-e-will" element={<Ewill user={user} />} />
+  {/* Personal */}
+  <Route path="/personal/funeral-planning" element={<FuneralPlanning user={user} />} />
+  <Route path="/personal/memory-lane" element={<MemoryLane user={user} />} />
+  <Route path="/personal/belongings" element={<Belongings user={user} />} />
+  <Route path="/personal/organ-donation" element={<OrganDonation user={user} />} />
+  {/* Proof of Life */}
+  <Route path="/proof-of-life" element={<ProofOfLife user={user} />} />
+  {/* Contacts */}
+  <Route path="/contacts" element={<Contacts user={user} />} />
+  {/* Admin Dashboard (if you want to add) */}
+  {/* <Route path="/admin" element={<AdminDashboard user={user} />} /> */}
+  {/* Redirect unknown routes to home */}
+  <Route path="*" element={<Navigate to="/" />} />
+</Routes>
+
         </div>
       </div>
     </Router>
