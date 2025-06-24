@@ -335,16 +335,33 @@ export default function ProofOfLife({ user }) {
               style={{ marginBottom: 9 }}
             />
           )}
-          {/* Show preview only after recording/file exists and NOT during live stream */}
-          {fileUrl && !recording && form.type === "video" && (
-            <video src={fileUrl} controls style={{ width: 80, borderRadius: 7, marginBottom: 7 }} />
-          )}
-          {fileUrl && !recording && form.type === "audio" && (
-            <audio src={fileUrl} controls style={{ width: 80, marginBottom: 7 }} />
-          )}
-          {form.file && form.type === "photo" && (
-            <img src={fileUrl} alt="" style={{ width: 54, borderRadius: 7, marginBottom: 7 }} />
-          )}
+         {/* VIDEO preview (uploaded/recorded or existing from mediaUrl) */}
+{!recording && form.type === "video" && (
+  fileUrl ? (
+    <video src={fileUrl} controls style={{ width: 80, borderRadius: 7, marginBottom: 7 }} />
+  ) : form.mediaUrl ? (
+    <video src={form.mediaUrl} controls style={{ width: 80, borderRadius: 7, marginBottom: 7 }} />
+  ) : null
+)}
+
+{/* AUDIO preview (uploaded/recorded or existing from mediaUrl) */}
+{!recording && form.type === "audio" && (
+  fileUrl ? (
+    <audio src={fileUrl} controls style={{ width: 80, marginBottom: 7 }} />
+  ) : form.mediaUrl ? (
+    <audio src={form.mediaUrl} controls style={{ width: 80, marginBottom: 7 }} />
+  ) : null
+)}
+
+{/* PHOTO preview (uploaded/recorded or existing from mediaUrl) */}
+{!recording && form.type === "photo" && (
+  fileUrl ? (
+    <img src={fileUrl} alt="" style={{ width: 54, borderRadius: 7, marginBottom: 7 }} />
+  ) : form.mediaUrl ? (
+    <img src={form.mediaUrl} alt="" style={{ width: 54, borderRadius: 7, marginBottom: 7 }} />
+  ) : null
+)}
+
           <div style={{ display: "flex", gap: 9, marginTop: 9 }}>
             <button className="btn-main" type="submit" style={{ flex: 1 }} disabled={uploading || recording}>
               {editingId ? "Update" : "Add"}
