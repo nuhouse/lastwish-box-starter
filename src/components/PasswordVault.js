@@ -4,19 +4,37 @@ import {
   doc, getDoc, setDoc, updateDoc, arrayUnion, arrayRemove
 } from "firebase/firestore";
 
-// --- Modern password-to-key using PBKDF2 (safe, always valid length)
-const PBKDF2_ITER = 100_000;
-const PBKDF2_SALT = "LastWishBoxVaultSalt"; // for production: use a per-user salt!
+// -- Per-user random salt helper --
+async function getOrCreateSalt(user, vaultRef) {
+  const snap = await getDoc(vaultRef);
+  if (snap.exists() && snap.data().salt) {
+    return snap.data().salt;
+  }
+  // Generate a random 16-byte salt and store as base64
+  const rand = window.crypto.getRandomValues(new Uint8Array(16));
+  const salt = btoa(String.fromCharCode(...rand));
+  if (snap.exists()) {
+    await updateDoc(vaultRef, { salt });
+  } else {
+    await setDoc(vaultRef, { salt }, { merge: true });
+  }
+  return salt;
+}
 
-async function getKey(pw) {
+// -- Modern password-to-key using PBKDF2 (uses per-user salt) --
+const PBKDF2_ITER = 100_000;
+
+async function getKey(pw, salt_b64) {
   const enc = new TextEncoder();
   const keyMaterial = await window.crypto.subtle.importKey(
     "raw", enc.encode(pw), "PBKDF2", false, ["deriveKey"]
   );
+  // Convert base64 salt to Uint8Array
+  const salt = Uint8Array.from(atob(salt_b64), c => c.charCodeAt(0));
   return window.crypto.subtle.deriveKey(
     {
       name: "PBKDF2",
-      salt: enc.encode(PBKDF2_SALT),
+      salt,
       iterations: PBKDF2_ITER,
       hash: "SHA-256"
     },
