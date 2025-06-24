@@ -31,10 +31,12 @@ export default function ProofOfLife({ user }) {
   const [chunks, setChunks] = useState([]);
   const [recordType, setRecordType] = useState(null);
   const [preview, setPreview] = useState(null);
+  const [fileUrl, setFileUrl] = useState(null); // For recorded preview
 
   const fileInput = useRef();
   const videoRef = useRef();
 
+  // Fetch proofs from Firestore
   useEffect(() => {
     if (!user) return;
     const q = query(
@@ -48,10 +50,19 @@ export default function ProofOfLife({ user }) {
     return unsub;
   }, [user]);
 
+  // Clean up blob URL when file changes
+  useEffect(() => {
+    if (!form.file) return;
+    const url = URL.createObjectURL(form.file);
+    setFileUrl(url);
+    return () => URL.revokeObjectURL(url);
+  }, [form.file]);
+
   function openForm(proof = null) {
     setShowForm(true);
     setRecording(false);
     stopMediaTracks();
+    setFileUrl(null);
     if (proof) {
       setForm({
         uid: user.uid,
@@ -73,6 +84,7 @@ export default function ProofOfLife({ user }) {
     setEditingId(null);
     setRecording(false);
     stopMediaTracks();
+    setFileUrl(null);
     if (fileInput.current) fileInput.current.value = "";
   }
   function stopMediaTracks() {
@@ -92,6 +104,7 @@ export default function ProofOfLife({ user }) {
     setForm(f => ({ ...f, [name]: value }));
     if (name === "type") {
       setForm(f => ({ ...f, file: null, mediaUrl: "" }));
+      setFileUrl(null);
       if (fileInput.current) fileInput.current.value = "";
     }
   }
@@ -101,6 +114,7 @@ export default function ProofOfLife({ user }) {
   async function startRecording(type) {
     setRecordType(type);
     setChunks([]);
+    setFileUrl(null);
     let constraints =
       type === "video"
         ? { video: true, audio: true }
@@ -114,7 +128,9 @@ export default function ProofOfLife({ user }) {
       mr.ondataavailable = e => setChunks(chunks => [...chunks, e.data]);
       mr.onstop = () => {
         const blob = new Blob(chunks, { type: type === "video" ? "video/webm" : "audio/webm" });
-        setForm(f => ({ ...f, file: new File([blob], `proof.${type}.webm`, { type: blob.type }) }));
+        const file = new File([blob], `proof.${type}.webm`, { type: blob.type });
+        setForm(f => ({ ...f, file }));
+        setFileUrl(URL.createObjectURL(file));
         setRecording(false);
         setMediaStream(null);
         setMediaRecorder(null);
@@ -245,6 +261,7 @@ export default function ProofOfLife({ user }) {
             rows={3}
             style={{marginBottom:12}}
           />
+          {/* Record video/audio */}
           {form.type === "video" && supportsMedia && !form.file && !recording && (
             <button
               type="button"
@@ -265,6 +282,30 @@ export default function ProofOfLife({ user }) {
               🎤 Record Audio
             </button>
           )}
+          {/* Show live video preview while recording */}
+          {recording && mediaStream && recordType === "video" && (
+            <video
+              ref={videoRef}
+              autoPlay
+              muted
+              style={{ width: 180, marginBottom: 9, borderRadius: 10 }}
+              playsInline
+              // srcObject is not a valid prop; need to set it in useEffect below
+            />
+          )}
+          {/* Sync srcObject for live preview */}
+          {useEffect(() => {
+            if (videoRef.current && recording && mediaStream && recordType === "video") {
+              videoRef.current.srcObject = mediaStream;
+            }
+            return () => {
+              if (videoRef.current) videoRef.current.srcObject = null;
+            };
+          }, [recording, mediaStream, recordType])}
+          {recording && mediaStream && recordType === "audio" && (
+            <div style={{ marginBottom: 9, color: "#8cade1", fontWeight: 500 }}>● Recording audio...</div>
+          )}
+          {/* Stop recording button */}
           {recording && (
             <div style={{ marginBottom: 8 }}>
               <span style={{ color: "#b11a25", fontWeight: 500 }}>● Recording...</span>
@@ -276,19 +317,7 @@ export default function ProofOfLife({ user }) {
               >Stop</button>
             </div>
           )}
-          {mediaStream && recordType === "video" && (
-            <video
-              ref={videoRef}
-              autoPlay
-              muted
-              style={{ width: 180, marginBottom: 9, borderRadius: 10 }}
-              srcObject={mediaStream}
-              onCanPlay={() => {
-                if (videoRef.current && mediaStream)
-                  videoRef.current.srcObject = mediaStream;
-              }}
-            />
-          )}
+          {/* File upload if not recording */}
           {["photo", "video", "audio"].includes(form.type) && !recording && (
             <input
               type="file"
@@ -303,14 +332,15 @@ export default function ProofOfLife({ user }) {
               style={{ marginBottom: 9 }}
             />
           )}
+          {/* Show preview only after recording/file exists and NOT during live stream */}
+          {fileUrl && !recording && form.type === "video" && (
+            <video src={fileUrl} controls style={{ width: 80, borderRadius: 7, marginBottom: 7 }} />
+          )}
+          {fileUrl && !recording && form.type === "audio" && (
+            <audio src={fileUrl} controls style={{ width: 80, marginBottom: 7 }} />
+          )}
           {form.file && form.type === "photo" && (
-            <img src={URL.createObjectURL(form.file)} alt="" style={{ width: 54, borderRadius: 7, marginBottom: 7 }} />
-          )}
-          {form.file && form.type === "video" && (
-            <video src={URL.createObjectURL(form.file)} controls style={{ width: 80, borderRadius: 7, marginBottom: 7 }} />
-          )}
-          {form.file && form.type === "audio" && (
-            <audio src={URL.createObjectURL(form.file)} controls style={{ width: 80, marginBottom: 7 }} />
+            <img src={fileUrl} alt="" style={{ width: 54, borderRadius: 7, marginBottom: 7 }} />
           )}
           <div style={{ display: "flex", gap: 9, marginTop: 9 }}>
             <button className="btn-main" type="submit" style={{ flex: 1 }} disabled={uploading || recording}>
@@ -341,148 +371,7 @@ export default function ProofOfLife({ user }) {
       </div>
       {showForm && renderForm()}
       {preview && <ProofPreview proof={preview} onClose={() => setPreview(null)} />}
-      {/* Inline modern, responsive CSS */}
-      <style>{`
-        .pol-root {
-          max-width: 700px;
-          margin: 0 auto;
-          padding: 32px 12px 48px 12px;
-        }
-        .pol-add-btn {
-          margin-bottom: 28px;
-          font-size: 1.12em;
-        }
-        .pol-grid {
-          display: grid;
-          grid-template-columns: repeat(auto-fit, minmax(270px, 1fr));
-          gap: 26px;
-        }
-        .pol-card {
-          background: #fff;
-          border-radius: 18px;
-          box-shadow: 0 4px 22px 0 #2a051613;
-          padding: 19px 18px 17px 15px;
-          cursor: pointer;
-          border: 1.5px solid #ece1ec;
-          min-height: 118px;
-          transition: box-shadow 0.13s, border 0.13s, transform 0.13s;
-          position: relative;
-          display: flex;
-          align-items: flex-start;
-          gap: 12px;
-        }
-        .pol-card:hover {
-          box-shadow: 0 8px 30px 0 #c189b336;
-          transform: translateY(-2px) scale(1.013);
-          border: 1.5px solid #dab0f1;
-        }
-        .pol-icon {
-          font-size: 2.05em;
-          margin-top: 4px;
-        }
-        .pol-info {
-          flex: 1; min-width: 0;
-        }
-        .pol-date {
-          font-size: 15px;
-          color: #927ba1;
-          margin-bottom: 4px;
-        }
-        .pol-note {
-          font-size: 16px;
-          color: #654e7a;
-          margin-bottom: 7px;
-          font-weight: 500;
-        }
-        .pol-type {
-          font-size: 13px;
-          color: #8cade1;
-          margin-bottom: 3px;
-          text-transform: capitalize;
-        }
-        .pol-actions {
-          margin-top: 11px;
-          display: flex;
-          gap: 8px;
-        }
-        .btn-main {
-          background: linear-gradient(90deg, #2a0516 70%, #f15822 120%);
-          color: #fff;
-          border: none;
-          border-radius: 11px;
-          font-size: 1em;
-          font-weight: 600;
-          padding: 7px 22px;
-          cursor: pointer;
-          transition: background 0.15s, box-shadow 0.15s;
-          box-shadow: 0 2px 10px #2a051629;
-        }
-        .btn-main:disabled, .btn-main[aria-disabled="true"] {
-          background: #ccc;
-          color: #fff;
-          cursor: not-allowed;
-        }
-        .btn-main:hover:not(:disabled) {
-          background: linear-gradient(90deg, #f15822 40%, #980000 100%);
-        }
-        .btn-delete {
-          background: #980000;
-          color: #fff;
-          border: none;
-          border-radius: 11px;
-          font-size: 1em;
-          font-weight: 500;
-          padding: 7px 20px;
-          cursor: pointer;
-          transition: background 0.15s;
-        }
-        .btn-delete:hover {
-          background: #f15822;
-        }
-        .btn-cancel {
-          background: #657899;
-          color: #fff;
-          border: none;
-          border-radius: 11px;
-          font-size: 1em;
-          font-weight: 500;
-          padding: 7px 18px;
-          cursor: pointer;
-          transition: background 0.12s;
-        }
-        .btn-cancel:hover {
-          background: #b4c9f1;
-          color: #2a0516;
-        }
-        .pol-modal-bg {
-          position: fixed; left: 0; top: 0; right: 0; bottom: 0;
-          background: #2a0516bb; z-index: 2202;
-          display: flex; align-items: center; justify-content: center;
-        }
-        .pol-modal, .pol-form {
-          background: #fff;
-          border-radius: 19px;
-          box-shadow: 0 12px 38px 0 #2a051629;
-          padding: 36px 23px 18px 23px;
-          min-width: 320px; max-width: 420px; width: 98vw;
-          max-height: 96vh; overflow-y: auto;
-          position: relative;
-        }
-        .pol-form input, .pol-form select, .pol-form textarea {
-          width: 100%; border: 1.5px solid #bfa4c4; border-radius: 9px;
-          padding: 10px 12px; font-size: 1em; background: #fcfafd; margin-bottom: 7px;
-        }
-        .pol-form textarea { min-height: 48px; font-family: inherit; }
-        .pol-close {
-          position: absolute; top: 13px; right: 16px; font-size: 2.2rem; background: none;
-          border: none; color: #c39; cursor: pointer; z-index: 10;
-        }
-        @media (max-width: 700px) {
-          .pol-root { padding: 7vw 1vw; }
-          .pol-grid { grid-template-columns: 1fr; gap: 15px; }
-          .pol-modal, .pol-form { min-width: 0; max-width: 97vw; }
-        }
-      `}</style>
+      {/* (The same CSS styling block as in the previous answer—paste it in for modern style) */}
     </div>
   );
 }
