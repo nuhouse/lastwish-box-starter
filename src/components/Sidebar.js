@@ -20,6 +20,7 @@ const menu = [
     label: "Messages",
     icon: "✉️",
     children: [
+      { label: "Legacy Messages", path: "/messages/legacy-message" },
       { label: "Personal Messages", path: "/messages/personal-messages" },
       { label: "Last Goodbyes", path: "/messages/last-goodbyes" },
       { label: "Videos", path: "/messages/videos" }
