@@ -14,6 +14,7 @@ import ProofOfLife from "./components/ProofOfLife";
 import Ewill from "./components/Ewill";
 import ImportantDocuments from "./components/ImportantDocuments";
 import PasswordVault from "./components/PasswordVault";
+import LegacyMessage from "./components/LegacyMessage";
 import './App.css';
 
 
@@ -74,6 +75,9 @@ function App() {
             {/* Redirect unknown routes to home */}
             <Route path="*" element={<Navigate to="/" />} />
               <Route path="/vaults/password-vault" element={<PasswordVault user={user} />} />
+              <Route path="/messages/legacy-message" element={
+  <LegacyMessage user={user} masterPw={masterPw /* pass if you have it in app state, else pass as blank "" */} />
+} />
           </Routes>
         </div>
       </div>
