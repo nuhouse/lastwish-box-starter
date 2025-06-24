@@ -21,9 +21,9 @@ async function getOrCreateSalt(user, vaultRef) {
   return salt;
 }
 
-// -- Modern password-to-key using PBKDF2 (uses per-user salt) --
 const PBKDF2_ITER = 100_000;
 
+// Uses per-user salt!
 async function getKey(pw, salt_b64) {
   const enc = new TextEncoder();
   const keyMaterial = await window.crypto.subtle.importKey(
@@ -45,19 +45,19 @@ async function getKey(pw, salt_b64) {
   );
 }
 
-// --- encryption helpers (unchanged)
-async function encrypt(text, pw) {
+// --- encryption helpers: salt required
+async function encrypt(text, pw, salt) {
   const iv = window.crypto.getRandomValues(new Uint8Array(12));
-  const key = await getKey(pw);
+  const key = await getKey(pw, salt);
   const enc = new TextEncoder().encode(text);
   const ct = await window.crypto.subtle.encrypt({ name: "AES-GCM", iv }, key, enc);
   return btoa(String.fromCharCode(...iv) + String.fromCharCode(...new Uint8Array(ct)));
 }
-async function decrypt(b64, pw) {
+async function decrypt(b64, pw, salt) {
   const bin = atob(b64);
   const iv = Uint8Array.from(bin.slice(0, 12), c => c.charCodeAt(0));
   const ct = Uint8Array.from(bin.slice(12), c => c.charCodeAt(0));
-  const key = await getKey(pw);
+  const key = await getKey(pw, salt);
   const dec = await window.crypto.subtle.decrypt({ name: "AES-GCM", iv }, key, ct);
   return new TextDecoder().decode(dec);
 }
@@ -69,6 +69,7 @@ export default function PasswordVault({ user }) {
   const [inputPw, setInputPw] = useState("");
   const [vault, setVault] = useState([]);
   const [testVal, setTestVal] = useState("");
+  const [salt, setSalt] = useState("");
   const [error, setError] = useState("");
   const [showAdd, setShowAdd] = useState(false);
   const [newLabel, setNewLabel] = useState("");
@@ -84,6 +85,8 @@ export default function PasswordVault({ user }) {
     (async () => {
       const vaultRef = doc(db, "passwordVault", user.uid);
       const snap = await getDoc(vaultRef);
+      const userSalt = await getOrCreateSalt(user, vaultRef);
+      setSalt(userSalt);
       if (!snap.exists()) {
         setState("setup");
         setTestVal(""); // nothing in vault yet
@@ -103,10 +106,14 @@ export default function PasswordVault({ user }) {
     if (!masterPw || masterPw.length < 8) return setError("Password must be at least 8 characters.");
     if (masterPw !== masterPw2) return setError("Passwords do not match.");
     try {
-      const testEncrypted = await encrypt("vault_test", masterPw);
-      await setDoc(doc(db, "passwordVault", user.uid), {
+      const vaultRef = doc(db, "passwordVault", user.uid);
+      const userSalt = await getOrCreateSalt(user, vaultRef);
+      setSalt(userSalt);
+      const testEncrypted = await encrypt("vault_test", masterPw, userSalt);
+      await setDoc(vaultRef, {
         test: testEncrypted,
-        entries: []
+        entries: [],
+        salt: userSalt
       });
       setTestVal(testEncrypted);
       setVault([]);
@@ -122,7 +129,10 @@ export default function PasswordVault({ user }) {
     e.preventDefault();
     setError("");
     try {
-      const result = await decrypt(testVal, inputPw);
+      const vaultRef = doc(db, "passwordVault", user.uid);
+      const userSalt = await getOrCreateSalt(user, vaultRef);
+      setSalt(userSalt);
+      const result = await decrypt(testVal, inputPw, userSalt);
       if (result !== "vault_test") throw new Error("Wrong password");
       setMasterPw(inputPw);
       setState("unlocked");
@@ -140,9 +150,11 @@ export default function PasswordVault({ user }) {
     setError("");
     if (!newLabel || !newValue) return setError("Fill in all fields.");
     try {
-      const encrypted = await encrypt(newValue, masterPw);
+      const vaultRef = doc(db, "passwordVault", user.uid);
+      const userSalt = salt || await getOrCreateSalt(user, vaultRef);
+      const encrypted = await encrypt(newValue, masterPw, userSalt);
       const newEntry = { label: newLabel, value: encrypted, time: Date.now() };
-      await updateDoc(doc(db, "passwordVault", user.uid), {
+      await updateDoc(vaultRef, {
         entries: arrayUnion(newEntry)
       });
       setVault(vault => [...vault, newEntry]);
@@ -158,7 +170,7 @@ export default function PasswordVault({ user }) {
       setShowPw(pw => ({ ...pw, [idx]: false }));
     } else {
       try {
-        const val = await decrypt(vault[idx].value, masterPw);
+        const val = await decrypt(vault[idx].value, masterPw, salt);
         setShowPw(pw => ({ ...pw, [idx]: val }));
       } catch (e) {
         setShowPw(pw => ({ ...pw, [idx]: "Error" }));
@@ -181,7 +193,8 @@ export default function PasswordVault({ user }) {
     const entry = vault[idx];
     if (!window.confirm("Delete this password?")) return;
     try {
-      await updateDoc(doc(db, "passwordVault", user.uid), {
+      const vaultRef = doc(db, "passwordVault", user.uid);
+      await updateDoc(vaultRef, {
         entries: arrayRemove(entry)
       });
       setVault(vault => vault.filter((_, i) => i !== idx));
@@ -197,9 +210,11 @@ export default function PasswordVault({ user }) {
   async function handleResetVault() {
     if (!window.confirm("This will delete all stored passwords and cannot be undone. Continue?")) return;
     try {
-      await setDoc(doc(db, "passwordVault", user.uid), {
+      const vaultRef = doc(db, "passwordVault", user.uid);
+      await setDoc(vaultRef, {
         test: "",
-        entries: []
+        entries: [],
+        salt: salt
       });
       setVault([]);
       setTestVal("");
