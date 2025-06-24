@@ -11,6 +11,7 @@ const menu = [
   label: "Vaults",
   icon: "🔒",
   children: [
+    { label: "Password Vault", path: "/vaults/password-vault" },
     { label: "Digital Platforms", path: "/vaults/digital-platforms" },
     { label: "Devices", path: "/vaults/devices" }
   ]
