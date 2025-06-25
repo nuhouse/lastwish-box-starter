@@ -144,6 +144,16 @@ export default function PasswordVault({ user }) {
     }
   }
 
+  // In PasswordVault.js, but can be placed in a shared util:
+export async function getVaultLabels(user) {
+  const vaultRef = doc(db, "passwordVault", user.uid);
+  const snap = await getDoc(vaultRef);
+  if (!snap.exists()) return [];
+  const data = snap.data();
+  return (data.entries || []).map(e => e.label);
+}
+
+
   // Add new password
   async function handleAdd(e) {
     e.preventDefault();
