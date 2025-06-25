@@ -32,6 +32,47 @@ export default function DigitalPlatforms({ user }) {
     return unsub;
   }, [user]);
 
+  import React, { useState, useEffect } from "react";
+import { getVaultLabels } from "./PasswordVault"; // path may need tweaking
+
+export default function DigitalPlatforms({ user }) {
+  const [platforms, setPlatforms] = useState([]);
+  const [vaultLabels, setVaultLabels] = useState([]);
+  const [form, setForm] = useState({
+    name: "",
+    url: "",
+    username: "",
+    vaultLabel: "",
+    notes: "",
+  });
+
+  useEffect(() => {
+    if (!user) return;
+    getVaultLabels(user).then(setVaultLabels);
+    // ...fetch platforms logic...
+  }, [user]);
+
+  // ...rest of DigitalPlatforms logic...
+
+  return (
+    <form>
+      {/* ...other fields... */}
+      <label>Password from Vault</label>
+      <select
+        value={form.vaultLabel}
+        onChange={e => setForm(f => ({ ...f, vaultLabel: e.target.value }))}
+      >
+        <option value="">Select (optional)</option>
+        {vaultLabels.map(label => (
+          <option key={label} value={label}>{label}</option>
+        ))}
+      </select>
+      {/* ...rest of form... */}
+    </form>
+  );
+}
+
+
   // Load password labels from vault
   useEffect(() => {
     if (!user) return;
