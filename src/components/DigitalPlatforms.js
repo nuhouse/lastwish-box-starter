@@ -2,8 +2,18 @@ import React, { useState, useEffect } from "react";
 import { db } from "../firebase";
 import {
   collection, doc, addDoc, updateDoc, deleteDoc,
-  onSnapshot, query, where, orderBy
+  onSnapshot, query, where, orderBy, getDoc
 } from "firebase/firestore";
+
+// Utility: Load password vault labels (non-sensitive)
+async function getVaultLabels(user) {
+  if (!user) return [];
+  const docRef = doc(db, "passwordVault", user.uid);
+  const vaultSnap = await getDoc(docRef);
+  if (!vaultSnap.exists()) return [];
+  const entries = vaultSnap.data().entries || [];
+  return entries.map(e => e.label);
+}
 
 export default function DigitalPlatforms({ user }) {
   const [platforms, setPlatforms] = useState([]);
@@ -32,60 +42,10 @@ export default function DigitalPlatforms({ user }) {
     return unsub;
   }, [user]);
 
-  import React, { useState, useEffect } from "react";
-import { getVaultLabels } from "./PasswordVault"; // path may need tweaking
-
-export default function DigitalPlatforms({ user }) {
-  const [platforms, setPlatforms] = useState([]);
-  const [vaultLabels, setVaultLabels] = useState([]);
-  const [form, setForm] = useState({
-    name: "",
-    url: "",
-    username: "",
-    vaultLabel: "",
-    notes: "",
-  });
-
-  useEffect(() => {
-    if (!user) return;
-    getVaultLabels(user).then(setVaultLabels);
-    // ...fetch platforms logic...
-  }, [user]);
-
-  // ...rest of DigitalPlatforms logic...
-
-  return (
-    <form>
-      {/* ...other fields... */}
-      <label>Password from Vault</label>
-      <select
-        value={form.vaultLabel}
-        onChange={e => setForm(f => ({ ...f, vaultLabel: e.target.value }))}
-      >
-        <option value="">Select (optional)</option>
-        {vaultLabels.map(label => (
-          <option key={label} value={label}>{label}</option>
-        ))}
-      </select>
-      {/* ...rest of form... */}
-    </form>
-  );
-}
-
-
   // Load password labels from vault
   useEffect(() => {
     if (!user) return;
-    (async () => {
-      const docRef = doc(db, "passwordVault", user.uid);
-      const vaultSnap = await db.getDoc(docRef);
-      if (!vaultSnap.exists()) {
-        setVaultLabels([]);
-      } else {
-        const entries = vaultSnap.data().entries || [];
-        setVaultLabels(entries.map(e => e.label));
-      }
-    })();
+    getVaultLabels(user).then(setVaultLabels);
   }, [user]);
 
   function handleChange(e) {
@@ -148,8 +108,8 @@ export default function DigitalPlatforms({ user }) {
     <div className="card" style={{ maxWidth: 640, margin: "40px auto" }}>
       <h2>Digital Platforms</h2>
       <p>
-        Save details for your key online platforms, logins, and instructions for your legacy. 
-        <b> No passwords are stored here!</b> 
+        Save details for your key online platforms, logins, and instructions for your legacy.
+        <b> No passwords are stored here!</b>
         Only the password label (reference) from your vault can be linked.
       </p>
       <form onSubmit={handleSubmit} style={{ marginBottom: 18 }}>
@@ -233,7 +193,10 @@ export default function DigitalPlatforms({ user }) {
                 <tr key={p.id}>
                   <td>{p.name}</td>
                   <td>{p.username}</td>
-                  <td>{p.passwordLabel ? <span style={{ color: "#657899", fontWeight: 500 }}>{p.passwordLabel}</span> : <span style={{ color: "#ccc" }}>None</span>}</td>
+                  <td>{p.passwordLabel
+                    ? <span style={{ color: "#657899", fontWeight: 500 }}>{p.passwordLabel}</span>
+                    : <span style={{ color: "#ccc" }}>None</span>
+                  }</td>
                   <td>
                     <button className="btn-main" style={{ fontSize: "0.98em", marginRight: 7 }} onClick={() => handleEdit(p)}>Edit</button>
                     <button className="btn-danger" style={{ fontSize: "0.98em" }} onClick={() => handleDelete(p.id)}>Delete</button>
