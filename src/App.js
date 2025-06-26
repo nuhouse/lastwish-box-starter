@@ -22,14 +22,14 @@ import Videos from "./components/Videos";
 import ProfilePage from "./components/ProfilePage";
 import './App.css';
 
-import { db } from "./firebase"; 
+import { db } from "./firebase";
 import { doc, setDoc, updateDoc, getDoc } from "firebase/firestore";
 
 function App() {
   const [user, setUser] = useState(null);
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
-  // -- SIDEBAR MOBILE --
+  // Responsive: close sidebar on desktop resize
   useEffect(() => {
     const closeSidebarOnResize = () => {
       if (window.innerWidth >= 900) setSidebarOpen(false);
@@ -38,63 +38,45 @@ function App() {
     return () => window.removeEventListener("resize", closeSidebarOnResize);
   }, []);
 
-  // --- On Login: Load from Firestore, then merge with Auth user ---
-  async function handleLogin(authUser) {
-    if (!authUser?.uid) return;
-    const userRef = doc(db, "users", authUser.uid);
-    const docSnap = await getDoc(userRef);
-    if (docSnap.exists()) {
-      setUser({ ...authUser, ...docSnap.data(), uid: authUser.uid });
-    } else {
-      // If first time, create doc
-      await setDoc(userRef, {
-        username: authUser.username || authUser.email || "",
-        name: authUser.name || "",
-        phone: authUser.phone || "",
-        address: authUser.address || "",
-        email: authUser.email || ""
-      });
-      setUser({ ...authUser, uid: authUser.uid });
-    }
-  }
-
-  // --- Auth logic ---
   if (!user) {
-    return <Auth onLogin={handleLogin} />;
+    return <Auth onLogin={setUser} />;
   }
 
-  // --- Profile Update Handler ---
+  // Profile Update Handler
   async function handleProfileUpdate(newProfile) {
     try {
-      const username = user.username || user.email || "";
-      const email = user.email || newProfile.email || "";
-
       const userRef = doc(db, "users", user.uid);
       const docSnap = await getDoc(userRef);
+
+      // Always use user.username, never undefined
+      const username = user.username || user.email || "";
+
       if (!docSnap.exists()) {
         await setDoc(userRef, {
-          username,
+          username: username,
           name: newProfile.name,
           phone: newProfile.phone,
           address: newProfile.address,
-          email
+          email: newProfile.email
         });
       } else {
         await updateDoc(userRef, {
           name: newProfile.name,
           phone: newProfile.phone,
           address: newProfile.address,
-          // email: email // Optionally allow email update
+          email: newProfile.email
         });
       }
 
-      // Fetch and set the updated profile (ALWAYS update from Firestore!)
+      // Fetch the updated user
       const freshUserSnap = await getDoc(userRef);
       if (freshUserSnap.exists()) {
+        // Only setUser after save!
         setUser({
-          ...user, // retain Auth info
+          ...user,
           ...freshUserSnap.data(),
-          uid: user.uid
+          uid: user.uid,
+          username: username
         });
       }
     } catch (e) {
@@ -105,8 +87,9 @@ function App() {
 
   function handleLogout() {
     setUser(null);
-    window.location.reload();
+    // No window.location.reload()!
   }
+
   function handlePasswordReset() {
     alert("Password reset flow coming soon!");
   }
@@ -137,28 +120,42 @@ function App() {
         <div className="content">
           <div className="app-header" style={{ position: "sticky", top: 0, zIndex: 100, background: "#fff" }}>
             <div className="header-left" style={{ display: "flex", alignItems: "center" }}>
-              <img src="/logo-placeholder.png" alt="Logo" className="header-logo" style={{ width: 40, height: 40, marginRight: 10 }} />
-              <span className="header-title" style={{
-                fontWeight: "bold",
-                fontSize: "1.2rem",
-                letterSpacing: 1,
-                color: "#2a0516",
-                lineHeight: 1
-              }}>
+              <img
+                src="/logo-placeholder.png"
+                alt="Logo"
+                className="header-logo"
+                style={{ width: 40, height: 40, marginRight: 10 }}
+              />
+              <span
+                className="header-title"
+                style={{
+                  fontWeight: "bold",
+                  fontSize: "1.2rem",
+                  letterSpacing: 1,
+                  color: "#2a0516",
+                  lineHeight: 1
+                }}
+              >
                 Lastwish Box
               </span>
             </div>
-            <button className="hamburger-menu" aria-label="Open menu" onClick={() => setSidebarOpen(true)} style={{
-              marginLeft: "auto",
-              background: "none",
-              border: "none",
-              cursor: "pointer"
-            }}>
+            <button
+              className="hamburger-menu"
+              aria-label="Open menu"
+              onClick={() => setSidebarOpen(true)}
+              style={{
+                marginLeft: "auto",
+                background: "none",
+                border: "none",
+                cursor: "pointer"
+              }}
+            >
               <span className="bar"></span>
               <span className="bar"></span>
               <span className="bar"></span>
             </button>
           </div>
+
           <Routes>
             <Route path="/" element={<Homepage />} />
             {/* Vaults */}
@@ -197,6 +194,7 @@ function App() {
           </Routes>
         </div>
       </div>
+      {/* Hamburger menu styles */}
       <style>{`
         .hamburger-menu {
           display: none;
