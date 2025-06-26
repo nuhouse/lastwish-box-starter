@@ -56,29 +56,50 @@ const menu = [
   }
 ];
 
-export default function Sidebar({ open = false, onClose }) {
+export default function Sidebar({ open = false, onClose, user, onLogout, onPasswordReset }) {
   const location = useLocation();
+  const navigate = useNavigate();
   const [openMenu, setOpenMenu] = useState(null);
 
-  // Accordion toggle for parent menus
   function toggleMenu(index) {
     setOpenMenu(prev => (prev === index ? null : index));
   }
-
   function isChildActive(children) {
     return children.some(child => location.pathname === child.path);
   }
-
   function handleLinkClick() {
     if (onClose) onClose();
   }
 
+  // --- PROFILE SECTION ---
+  function renderProfileSection() {
+    const initials = user.displayName
+      ? user.displayName.split(' ').map(n => n[0]).join('')
+      : (user.email ? user.email[0].toUpperCase() : '?');
+    return (
+      <div className="sidebar-profile">
+        <div className="sidebar-profile-avatar">{initials}</div>
+        <div className="sidebar-profile-details">
+          <div style={{ fontWeight: 500 }}>{user.displayName || user.name || user.email}</div>
+          <div style={{ color: "#a79cc4", fontSize: 13 }}>{user.email}</div>
+        </div>
+        <button className="btn-main" style={{ marginTop: 12, width: "100%" }} onClick={() => { navigate('/profile'); if (onClose) onClose(); }}>
+          Profile
+        </button>
+        <button className="btn-cancel" style={{ marginTop: 8, width: "100%" }} onClick={onPasswordReset}>
+          Reset Password
+        </button>
+        <button className="btn-danger" style={{ marginTop: 8, width: "100%" }} onClick={onLogout}>
+          Logout
+        </button>
+      </div>
+    );
+  }
+
   return (
     <aside className={`sidebar-root${open ? " sidebar-open" : ""}`}>
-      <div className="sidebar-brand">
-        Lastwish Box
-      </div>
-      <nav>
+      <div className="sidebar-brand">Lastwish Box</div>
+      <nav style={{ flex: 1 }}>
         <ul className="sidebar-list">
           {menu.map((item, i) => (
             <li key={item.label}>
@@ -137,6 +158,7 @@ export default function Sidebar({ open = false, onClose }) {
           ))}
         </ul>
       </nav>
+      {renderProfileSection()}
     </aside>
   );
 }
