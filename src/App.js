@@ -25,7 +25,6 @@ import ProfilePage from "./components/ProfilePage";
 import './App.css';
 
 // --- Firebase imports ---
-// Adjust the path to your firebase config if needed!
 import { db } from "./firebase"; 
 import { doc, setDoc, updateDoc, getDoc } from "firebase/firestore";
 
@@ -50,7 +49,10 @@ function App() {
   // ---- Profile Update Handler ----
   async function handleProfileUpdate(newProfile) {
     try {
-      // Save to Firestore: user.uid required!
+      // Use .email if .username not present (Firebase Auth pattern)
+      const username = user.username || user.email || "";
+      const email = user.email || newProfile.email || "";
+
       const userRef = doc(db, "users", user.uid);
 
       // Check if doc exists
@@ -58,11 +60,11 @@ function App() {
       if (!docSnap.exists()) {
         // If not, create it with all profile fields!
         await setDoc(userRef, {
-          username: user.username,
+          username,
           name: newProfile.name,
           phone: newProfile.phone,
           address: newProfile.address,
-          email: newProfile.email
+          email
         });
       } else {
         // If yes, just update the changed fields
@@ -70,7 +72,7 @@ function App() {
           name: newProfile.name,
           phone: newProfile.phone,
           address: newProfile.address,
-          email: newProfile.email
+          // email: email // optionally allow email update
         });
       }
 
