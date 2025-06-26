@@ -1,7 +1,6 @@
 import React, { useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 
-// Menu structure (edit as needed)
 const menu = [
   {
     label: "Home",
@@ -57,30 +56,23 @@ const menu = [
   }
 ];
 
-export default function Sidebar({ open, onClose }) {
+export default function Sidebar({ open = false, onClose }) {
   const location = useLocation();
   const [openMenus, setOpenMenus] = useState({});
 
-  // Toggle accordion for parent menus
+  // Accordion toggle for parent menus
   function toggleMenu(index) {
     setOpenMenus(prev => ({ ...prev, [index]: !prev[index] }));
   }
 
-  // Helper to highlight parent if any child is active
+  // Helper to check if any child is active for highlighting parent
   function isChildActive(children) {
     return children.some(child => location.pathname === child.path);
   }
 
-  // On link click (close sidebar if on mobile)
+  // Optionally close sidebar when a link is clicked (on mobile)
   function handleLinkClick() {
     if (onClose) onClose();
-  }
-
-  // Keyboard accessibility for menu accordions
-  function handleParentKeyDown(e, i) {
-    if (e.key === "Enter" || e.key === " ") {
-      toggleMenu(i);
-    }
   }
 
   return (
@@ -100,11 +92,7 @@ export default function Sidebar({ open, onClose }) {
                       (openMenus[i] ? " open" : "") +
                       (isChildActive(item.children) ? " active" : "")
                     }
-                    tabIndex={0}
                     onClick={() => toggleMenu(i)}
-                    onKeyDown={e => handleParentKeyDown(e, i)}
-                    aria-expanded={!!openMenus[i]}
-                    aria-label={item.label}
                   >
                     <span style={{ marginRight: 10 }}>{item.icon}</span>
                     {item.label}
@@ -115,7 +103,6 @@ export default function Sidebar({ open, onClose }) {
                         transition: "transform 0.2s",
                         transform: openMenus[i] ? "rotate(90deg)" : "rotate(0)"
                       }}
-                      aria-hidden="true"
                     >▶</span>
                   </div>
                   <ul
