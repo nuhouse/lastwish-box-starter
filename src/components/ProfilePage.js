@@ -1,7 +1,6 @@
 import React, { useState } from "react";
 
-// Pass in the 'user' object and a logout handler as props
-export default function ProfileSidebar({ user, onUpdate, onLogout }) {
+export default function ProfilePage({ user, onUpdate, onLogout }) {
   const [edit, setEdit] = useState(false);
   const [profile, setProfile] = useState({
     username: user.username,
@@ -16,10 +15,11 @@ export default function ProfileSidebar({ user, onUpdate, onLogout }) {
     setProfile({ ...profile, [e.target.name]: e.target.value });
   }
 
-  async function handleSave() {
+  async function handleSave(e) {
+    e.preventDefault();
     setSaving(true);
     try {
-      // Call parent handler to update in DB
+      // Call parent handler to update in DB (e.g., Firebase or your API)
       await onUpdate(profile);
       setEdit(false);
     } catch (e) {
@@ -29,91 +29,102 @@ export default function ProfileSidebar({ user, onUpdate, onLogout }) {
   }
 
   return (
-    <div className="sidebar-profile">
-      <div style={{ fontWeight: 600, marginBottom: 10, fontSize: 17 }}>Profile</div>
-      <div style={{ marginBottom: 8, fontSize: 15 }}>
-        <span style={{ color: "#8cade1" }}>Username:</span><br />
-        <span>{profile.username}</span>
+    <div className="profile-page-wrapper">
+      <div className="profile-card">
+        <h2>Profile</h2>
+        <form onSubmit={handleSave}>
+          <div className="profile-row">
+            <label>Username</label>
+            <input value={profile.username} disabled />
+          </div>
+          <div className="profile-row">
+            <label>Name</label>
+            {edit ? (
+              <input
+                name="name"
+                value={profile.name}
+                onChange={handleChange}
+                autoFocus
+                required
+              />
+            ) : (
+              <div className="profile-value">{profile.name || <span className="profile-placeholder">Not set</span>}</div>
+            )}
+          </div>
+          <div className="profile-row">
+            <label>Email</label>
+            {edit ? (
+              <input
+                name="email"
+                type="email"
+                value={profile.email}
+                onChange={handleChange}
+                required
+              />
+            ) : (
+              <div className="profile-value">{profile.email || <span className="profile-placeholder">Not set</span>}</div>
+            )}
+          </div>
+          <div className="profile-row">
+            <label>Phone</label>
+            {edit ? (
+              <input
+                name="phone"
+                value={profile.phone}
+                onChange={handleChange}
+                maxLength={20}
+              />
+            ) : (
+              <div className="profile-value">{profile.phone || <span className="profile-placeholder">Not set</span>}</div>
+            )}
+          </div>
+          <div className="profile-row">
+            <label>Address</label>
+            {edit ? (
+              <input
+                name="address"
+                value={profile.address}
+                onChange={handleChange}
+                maxLength={128}
+              />
+            ) : (
+              <div className="profile-value">{profile.address || <span className="profile-placeholder">Not set</span>}</div>
+            )}
+          </div>
+
+          <div className="profile-actions">
+            {edit ? (
+              <>
+                <button className="btn-main" type="submit" disabled={saving}>
+                  {saving ? "Saving..." : "Save"}
+                </button>
+                <button
+                  className="btn-cancel"
+                  type="button"
+                  onClick={() => setEdit(false)}
+                  disabled={saving}
+                >
+                  Cancel
+                </button>
+              </>
+            ) : (
+              <button
+                className="btn-main"
+                type="button"
+                onClick={() => setEdit(true)}
+              >
+                Edit Profile
+              </button>
+            )}
+          </div>
+        </form>
+        <button
+          className="btn-danger profile-logout"
+          onClick={onLogout}
+        >
+          Logout
+        </button>
       </div>
-      {edit ? (
-        <>
-          <label>
-            Name:
-            <input
-              name="name"
-              value={profile.name}
-              onChange={handleChange}
-              style={{ width: "100%" }}
-              autoFocus
-            />
-          </label>
-          <label>
-            Email:
-            <input
-              name="email"
-              type="email"
-              value={profile.email}
-              onChange={handleChange}
-              style={{ width: "100%" }}
-            />
-          </label>
-          <label>
-            Phone:
-            <input
-              name="phone"
-              value={profile.phone}
-              onChange={handleChange}
-              style={{ width: "100%" }}
-            />
-          </label>
-          <label>
-            Address:
-            <input
-              name="address"
-              value={profile.address}
-              onChange={handleChange}
-              style={{ width: "100%" }}
-            />
-          </label>
-          <div style={{ display: "flex", gap: 8, marginTop: 10 }}>
-            <button className="btn-main" onClick={handleSave} disabled={saving}>
-              {saving ? "Saving..." : "Save"}
-            </button>
-            <button className="btn-cancel" onClick={() => setEdit(false)} disabled={saving}>
-              Cancel
-            </button>
-          </div>
-        </>
-      ) : (
-        <>
-          <div style={{ fontSize: 15, marginBottom: 4 }}>
-            <span style={{ color: "#8cade1" }}>Name:</span> {profile.name || <span style={{ color: "#888" }}>Not set</span>}
-          </div>
-          <div style={{ fontSize: 15, marginBottom: 4 }}>
-            <span style={{ color: "#8cade1" }}>Email:</span> {profile.email || <span style={{ color: "#888" }}>Not set</span>}
-          </div>
-          <div style={{ fontSize: 15, marginBottom: 4 }}>
-            <span style={{ color: "#8cade1" }}>Phone:</span> {profile.phone || <span style={{ color: "#888" }}>Not set</span>}
-          </div>
-          <div style={{ fontSize: 15, marginBottom: 8 }}>
-            <span style={{ color: "#8cade1" }}>Address:</span> {profile.address || <span style={{ color: "#888" }}>Not set</span>}
-          </div>
-          <button className="btn-main" style={{ width: "100%" }} onClick={() => setEdit(true)}>
-            Edit Profile
-          </button>
-        </>
-      )}
-      <button
-        className="btn-danger"
-        style={{
-          marginTop: 16,
-          width: "100%",
-          padding: "8px 0"
-        }}
-        onClick={onLogout}
-      >
-        Logout
-      </button>
     </div>
   );
 }
