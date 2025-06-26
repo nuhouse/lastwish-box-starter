@@ -1,5 +1,3 @@
-// App.js
-
 import React, { useState, useEffect } from "react";
 import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
 import Sidebar from "./components/Sidebar";
@@ -24,7 +22,6 @@ import Videos from "./components/Videos";
 import ProfilePage from "./components/ProfilePage";
 import './App.css';
 
-// --- Firebase imports ---
 import { db } from "./firebase"; 
 import { doc, setDoc, updateDoc, getDoc } from "firebase/firestore";
 
@@ -32,7 +29,7 @@ function App() {
   const [user, setUser] = useState(null);
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
-  // Close sidebar on desktop resize
+  // -- SIDEBAR MOBILE --
   useEffect(() => {
     const closeSidebarOnResize = () => {
       if (window.innerWidth >= 900) setSidebarOpen(false);
@@ -41,24 +38,40 @@ function App() {
     return () => window.removeEventListener("resize", closeSidebarOnResize);
   }, []);
 
-  // Auth logic
-  if (!user) {
-    return <Auth onLogin={setUser} />;
+  // --- On Login: Load from Firestore, then merge with Auth user ---
+  async function handleLogin(authUser) {
+    if (!authUser?.uid) return;
+    const userRef = doc(db, "users", authUser.uid);
+    const docSnap = await getDoc(userRef);
+    if (docSnap.exists()) {
+      setUser({ ...authUser, ...docSnap.data(), uid: authUser.uid });
+    } else {
+      // If first time, create doc
+      await setDoc(userRef, {
+        username: authUser.username || authUser.email || "",
+        name: authUser.name || "",
+        phone: authUser.phone || "",
+        address: authUser.address || "",
+        email: authUser.email || ""
+      });
+      setUser({ ...authUser, uid: authUser.uid });
+    }
   }
 
-  // ---- Profile Update Handler ----
+  // --- Auth logic ---
+  if (!user) {
+    return <Auth onLogin={handleLogin} />;
+  }
+
+  // --- Profile Update Handler ---
   async function handleProfileUpdate(newProfile) {
     try {
-      // Use .email if .username not present (Firebase Auth pattern)
       const username = user.username || user.email || "";
       const email = user.email || newProfile.email || "";
 
       const userRef = doc(db, "users", user.uid);
-
-      // Check if doc exists
       const docSnap = await getDoc(userRef);
       if (!docSnap.exists()) {
-        // If not, create it with all profile fields!
         await setDoc(userRef, {
           username,
           name: newProfile.name,
@@ -67,19 +80,19 @@ function App() {
           email
         });
       } else {
-        // If yes, just update the changed fields
         await updateDoc(userRef, {
           name: newProfile.name,
           phone: newProfile.phone,
           address: newProfile.address,
-          // email: email // optionally allow email update
+          // email: email // Optionally allow email update
         });
       }
 
-      // Fetch and set the updated profile
+      // Fetch and set the updated profile (ALWAYS update from Firestore!)
       const freshUserSnap = await getDoc(userRef);
       if (freshUserSnap.exists()) {
         setUser({
+          ...user, // retain Auth info
           ...freshUserSnap.data(),
           uid: user.uid
         });
@@ -90,27 +103,22 @@ function App() {
     }
   }
 
-  // ---- Logout and Password Reset ----
   function handleLogout() {
     setUser(null);
     window.location.reload();
   }
   function handlePasswordReset() {
-    // Add your password reset logic (firebase, modal, etc)
     alert("Password reset flow coming soon!");
   }
 
   return (
     <Router>
       <div className="app-root">
-        {/* Sidebar */}
         <Sidebar
           open={sidebarOpen}
           onClose={() => setSidebarOpen(false)}
           user={user}
         />
-
-        {/* Overlay for mobile */}
         {sidebarOpen && (
           <div
             className="sidebar-overlay"
@@ -126,49 +134,31 @@ function App() {
           />
         )}
 
-        {/* Main content area */}
         <div className="content">
-          {/* Header */}
           <div className="app-header" style={{ position: "sticky", top: 0, zIndex: 100, background: "#fff" }}>
             <div className="header-left" style={{ display: "flex", alignItems: "center" }}>
-              <img
-                src="/logo-placeholder.png"
-                alt="Logo"
-                className="header-logo"
-                style={{ width: 40, height: 40, marginRight: 10 }}
-              />
-              <span
-                className="header-title"
-                style={{
-                  fontWeight: "bold",
-                  fontSize: "1.2rem",
-                  letterSpacing: 1,
-                  color: "#2a0516",
-                  lineHeight: 1
-                }}
-              >
+              <img src="/logo-placeholder.png" alt="Logo" className="header-logo" style={{ width: 40, height: 40, marginRight: 10 }} />
+              <span className="header-title" style={{
+                fontWeight: "bold",
+                fontSize: "1.2rem",
+                letterSpacing: 1,
+                color: "#2a0516",
+                lineHeight: 1
+              }}>
                 Lastwish Box
               </span>
             </div>
-            {/* Hamburger menu (mobile only) */}
-            <button
-              className="hamburger-menu"
-              aria-label="Open menu"
-              onClick={() => setSidebarOpen(true)}
-              style={{
-                marginLeft: "auto",
-                background: "none",
-                border: "none",
-                cursor: "pointer"
-              }}
-            >
+            <button className="hamburger-menu" aria-label="Open menu" onClick={() => setSidebarOpen(true)} style={{
+              marginLeft: "auto",
+              background: "none",
+              border: "none",
+              cursor: "pointer"
+            }}>
               <span className="bar"></span>
               <span className="bar"></span>
               <span className="bar"></span>
             </button>
           </div>
-
-          {/* Main routes */}
           <Routes>
             <Route path="/" element={<Homepage />} />
             {/* Vaults */}
@@ -207,7 +197,6 @@ function App() {
           </Routes>
         </div>
       </div>
-      {/* Hamburger menu styles */}
       <style>{`
         .hamburger-menu {
           display: none;
