@@ -19,20 +19,14 @@ import AdminDashboard from "./components/AdminDashboard";
 import DigitalPlatforms from "./components/DigitalPlatforms";
 import LastGoodbyes from "./components/LastGoodbyes";
 import Videos from "./components/Videos";
+import ProfilePage from "./components/ProfilePage";
 import './App.css';
-
-const Placeholder = ({ title }) => (
-  <div style={{ padding: 32 }}>
-    <h2>{title}</h2>
-    <p>This section will be enabled soon.</p>
-  </div>
-);
 
 function App() {
   const [user, setUser] = useState(null);
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
-  // Auto-close sidebar when window is resized to desktop
+  // Close sidebar on desktop resize
   useEffect(() => {
     const closeSidebarOnResize = () => {
       if (window.innerWidth >= 900) setSidebarOpen(false);
@@ -41,17 +35,35 @@ function App() {
     return () => window.removeEventListener("resize", closeSidebarOnResize);
   }, []);
 
+  // Auth logic
   if (!user) {
     return <Auth onLogin={setUser} />;
+  }
+
+  // Logout and Password Reset handlers (customize for your backend)
+  function handleLogout() {
+    // Add your logout logic (firebase signOut etc)
+    setUser(null);
+    window.location.reload();
+  }
+  function handlePasswordReset() {
+    // Add your password reset logic (firebase, modal, etc)
+    alert("Password reset flow coming soon!");
   }
 
   return (
     <Router>
       <div className="app-root">
-        {/* Sidebar */}
-        <Sidebar open={sidebarOpen} onClose={() => setSidebarOpen(false)} />
+        {/* Sidebar with user and profile props */}
+        <Sidebar
+          open={sidebarOpen}
+          onClose={() => setSidebarOpen(false)}
+          user={user}
+          onLogout={handleLogout}
+          onPasswordReset={handlePasswordReset}
+        />
 
-        {/* Overlay for mobile when sidebar is open */}
+        {/* Overlay for mobile */}
         {sidebarOpen && (
           <div
             className="sidebar-overlay"
@@ -67,6 +79,7 @@ function App() {
           />
         )}
 
+        {/* Main content area */}
         <div className="content">
           {/* Header */}
           <div className="app-header" style={{ position: "sticky", top: 0, zIndex: 100, background: "#fff" }}>
@@ -108,6 +121,7 @@ function App() {
             </button>
           </div>
 
+          {/* Main routes */}
           <Routes>
             <Route path="/" element={<Homepage />} />
             {/* Vaults */}
@@ -131,13 +145,20 @@ function App() {
             <Route path="/proof-of-life" element={<ProofOfLife user={user} />} />
             {/* Contacts */}
             <Route path="/contacts" element={<Contacts user={user} />} />
+            {/* Profile Page */}
+            <Route path="/profile" element={
+              <ProfilePage
+                user={user}
+                onLogout={handleLogout}
+                onPasswordReset={handlePasswordReset}
+              />
+            } />
             {/* Admin Dashboard (optional) */}
             {/* <Route path="/admin" element={<AdminDashboard user={user} />} /> */}
             <Route path="*" element={<Navigate to="/" />} />
           </Routes>
         </div>
       </div>
-
       {/* Hamburger menu styles */}
       <style>{`
         .hamburger-menu {
