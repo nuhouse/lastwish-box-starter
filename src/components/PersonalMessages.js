@@ -26,7 +26,7 @@ export default function PersonalMessages({ user }) {
 
   // Load messages
   useEffect(() => {
-    if (!user) return;
+    if (!user?.uid) return;
     const q = query(
       collection(db, "personalMessages"),
       where("uid", "==", user.uid),
@@ -36,7 +36,7 @@ export default function PersonalMessages({ user }) {
       setMessages(snap.docs.map(d => ({ id: d.id, ...d.data() })));
     });
     return unsub;
-  }, [user]);
+  }, [user?.uid]);
 
   // Upload new message
   const handleUpload = async e => {
@@ -65,7 +65,7 @@ export default function PersonalMessages({ user }) {
       });
       setText("");
       setFile(null);
-      if (fileInput.current) fileInput.current.value = "";
+      fileInput.current.value = "";
     } catch (e) {
       alert("Upload failed: " + e.message);
     }
@@ -78,20 +78,20 @@ export default function PersonalMessages({ user }) {
       if (msg.fileUrl && msg.fileName) {
         try {
           await deleteObject(ref(storage, `personalMessages/${user.uid}/${msg.fileName}`));
-        } catch (e) { /* Ignore */ }
+        } catch (e) { /* Ignore if not found */ }
       }
       await deleteDoc(doc(db, "personalMessages", msg.id));
     }
   };
 
   // Start editing
-  const handleEdit = (msg) => {
+  const handleEdit = msg => {
     setEditingId(msg.id);
     setEditingText(msg.text);
   };
 
   // Save editing
-  const handleSaveEdit = async (msg) => {
+  const handleSaveEdit = async msg => {
     if (editingText.trim().length < 2) {
       alert("Message too short.");
       return;
@@ -109,94 +109,92 @@ export default function PersonalMessages({ user }) {
 
   return (
     <div>
-      <h2>Personal Messages</h2>
-      <form className="card" onSubmit={handleUpload} style={{ maxWidth: 430, marginBottom: 28 }}>
+      <h2 style={{ marginBottom: 14 }}>Personal Messages</h2>
+
+      {/* Add New Message Form */}
+      <form
+        className="card"
+        onSubmit={handleUpload}
+        style={{ maxWidth: 420, marginBottom: 24 }}
+      >
         <textarea
           value={text}
           required
           minLength={2}
           maxLength={2000}
-          className="input"
           placeholder="Write your message..."
           onChange={e => setText(e.target.value)}
-          rows={4}
-          style={{ resize: "vertical" }}
+          style={{ minHeight: 64, resize: "vertical" }}
         />
         <input
           type="file"
           ref={fileInput}
           accept="image/*,video/*,.pdf,.doc,.docx,.xls,.xlsx,.txt"
           onChange={e => setFile(e.target.files[0])}
-          style={{ marginBottom: 10 }}
         />
-        <button type="submit" disabled={uploading} className="btn-main" style={{ width: 160 }}>
-          {uploading ? "Uploading..." : "Add Message"}
-        </button>
+        <div style={{ display: "flex", gap: 10, marginTop: 8 }}>
+          <button type="submit" className="btn-main" disabled={uploading} style={{ flex: 1 }}>
+            {uploading ? "Uploading..." : "Add Message"}
+          </button>
+        </div>
       </form>
 
-      <div style={{ maxWidth: 640 }}>
+      {/* Messages Grid */}
+      <div className="page-grid">
         {messages.map(msg => (
-          <div className="card" key={msg.id} style={{ position: "relative", marginBottom: 20 }}>
+          <div className="card" key={msg.id} style={{ position: "relative", minHeight: 190 }}>
             {editingId === msg.id ? (
-              <div>
+              <>
                 <textarea
                   value={editingText}
                   minLength={2}
                   maxLength={2000}
                   required
                   autoFocus
-                  className="input"
-                  rows={4}
                   onChange={e => setEditingText(e.target.value)}
-                  style={{ resize: "vertical" }}
+                  style={{ minHeight: 60, resize: "vertical" }}
                 />
-                <div style={{ marginTop: 8, display: "flex", gap: 9 }}>
-                  <button onClick={() => handleSaveEdit(msg)} type="button" className="btn-main">
-                    Save
-                  </button>
-                  <button onClick={handleCancelEdit} type="button" className="btn-cancel">
-                    Cancel
-                  </button>
+                <div style={{ display: "flex", gap: 8 }}>
+                  <button onClick={() => handleSaveEdit(msg)} className="btn-main" type="button">Save</button>
+                  <button onClick={handleCancelEdit} className="btn-cancel" type="button">Cancel</button>
                 </div>
-              </div>
+              </>
             ) : (
               <>
-                <div style={{ marginBottom: 6, whiteSpace: "pre-line" }}>{msg.text}</div>
+                <div style={{ marginBottom: 8, whiteSpace: "pre-line" }}>{msg.text}</div>
                 {msg.fileUrl && (
                   msg.fileType === "image" ? (
                     <img
                       src={msg.fileUrl}
                       alt=""
                       style={{
-                        width: 100, height: 100, objectFit: "cover",
-                        borderRadius: 8, marginBottom: 4,
-                        border: "2px solid #eee", boxShadow: "0 2px 6px rgba(0,0,0,0.06)"
+                        width: "100%",
+                        maxWidth: 120,
+                        height: 100,
+                        objectFit: "cover",
+                        borderRadius: 8,
+                        marginBottom: 4,
+                        border: "2px solid #eee",
+                        boxShadow: "0 2px 6px rgba(0,0,0,0.06)",
+                        cursor: "pointer"
                       }}
                     />
                   ) : msg.fileType === "video" ? (
-                    <video src={msg.fileUrl} controls style={{ maxWidth: "100%", borderRadius: 8, marginBottom: 4 }} />
+                    <video src={msg.fileUrl} controls style={{ width: "100%", maxWidth: 180, borderRadius: 8, marginBottom: 4 }} />
                   ) : (
-                    <a href={msg.fileUrl} target="_blank" rel="noopener noreferrer" style={{ color: "var(--brand-accent)", textDecoration: "underline" }}>
+                    <a href={msg.fileUrl} target="_blank" rel="noopener noreferrer" style={{ color: "#f15822", textDecoration: "underline" }}>
                       Download File
                     </a>
                   )
                 )}
-                <div style={{ fontSize: "0.97em", color: "#657899", marginTop: 4 }}>
+                <div style={{ fontSize: "0.93em", color: "#657899", marginTop: 6, marginBottom: 2 }}>
                   {msg.created && msg.created.toDate
                     ? msg.created.toDate().toLocaleString()
                     : ""}
                 </div>
-                <div style={{ position: "absolute", top: 14, right: 10, display: "flex", gap: 8 }}>
-                  <button
-                    onClick={() => handleEdit(msg)}
-                    className="btn-main"
-                    style={{ padding: "4px 14px", fontSize: "0.93em" }}
-                  >Edit</button>
-                  <button
-                    onClick={() => handleDelete(msg)}
-                    className="btn-danger"
-                    style={{ padding: "4px 14px", fontSize: "0.93em" }}
-                  >Delete</button>
+                <div style={{ display: "flex", gap: 7, marginTop: 10 }}>
+                  <button onClick={() => handleEdit(msg)} className="btn-main" type="button">Edit</button>
+                  <button onClick={() => handleDelete(msg)} className="btn-danger" type="button">Delete</button>
                 </div>
               </>
             )}
