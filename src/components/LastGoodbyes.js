@@ -9,7 +9,7 @@ import {
 
 export default function LastGoodbyes({ user }) {
   const [loading, setLoading] = useState(true);
-  const [message, setMessage] = useState(null); // { subject, type, content, mediaUrl }
+  const [message, setMessage] = useState(null);
   const [editing, setEditing] = useState(false);
   const [type, setType] = useState("text");
   const [subject, setSubject] = useState("");
@@ -20,10 +20,12 @@ export default function LastGoodbyes({ user }) {
   const [recording, setRecording] = useState(false);
   const [mediaStream, setMediaStream] = useState(null);
   const [mediaRecorder, setMediaRecorder] = useState(null);
-  const [chunks, setChunks] = useState([]);
   const [error, setError] = useState("");
   const fileInput = useRef();
   const videoRef = useRef();
+
+  // Use a ref for recording chunks (state not reliable in async)
+  const chunksRef = useRef([]);
 
   // Load existing message
   useEffect(() => {
@@ -72,29 +74,46 @@ export default function LastGoodbyes({ user }) {
 
   // --- Recording logic ---
   async function startRecording() {
-    setChunks([]);
+    setError("");
+    chunksRef.current = [];
     let constraints = type === "audio"
       ? { audio: true, video: false }
       : { audio: true, video: true };
     try {
       const stream = await navigator.mediaDevices.getUserMedia(constraints);
       setMediaStream(stream);
-      const rec = new window.MediaRecorder(stream, { mimeType: type === "audio" ? "audio/webm" : "video/webm" });
-      setMediaRecorder(rec);
-      rec.ondataavailable = e => setChunks(c => [...c, e.data]);
-      rec.onstop = async () => {
-        const blob = new Blob(chunks, { type: type === "audio" ? "audio/webm" : "video/webm" });
-        setFile(new File([blob], `goodbye.${type}.webm`, { type: blob.type }));
+
+      const options = type === "audio"
+        ? { mimeType: "audio/webm" }
+        : { mimeType: "video/webm;codecs=vp9,opus" };
+
+      const rec = new window.MediaRecorder(stream, options);
+
+      rec.ondataavailable = e => {
+        if (e.data.size > 0) chunksRef.current.push(e.data);
+      };
+
+      rec.onstop = () => {
+        const blob = new Blob(
+          chunksRef.current,
+          { type: type === "audio" ? "audio/webm" : "video/webm" }
+        );
+        const f = new File([blob], `goodbye.${type}.webm`, { type: blob.type });
+        setFile(f);
         setPreviewUrl(URL.createObjectURL(blob));
         setRecording(false);
         setMediaStream(null);
+        chunksRef.current = [];
       };
+
+      setMediaRecorder(rec);
       rec.start();
       setRecording(true);
     } catch (err) {
       setError("Recording error: " + err.message);
     }
   }
+
   function stopRecording() {
     if (mediaRecorder) mediaRecorder.stop();
     if (mediaStream) {
@@ -102,6 +121,7 @@ export default function LastGoodbyes({ user }) {
       setMediaStream(null);
     }
   }
+
   useEffect(() => {
     if (videoRef.current && recording && mediaStream && type === "video") {
       videoRef.current.srcObject = mediaStream;
@@ -118,7 +138,6 @@ export default function LastGoodbyes({ user }) {
       return setError("Please record or upload a file.");
     let uploadUrl = mediaUrl;
     if (["audio", "video"].includes(type) && file) {
-      // Upload to Firebase Storage
       const ext = file.name.split(".").pop() || (type === "audio" ? "webm" : "webm");
       const fname = `${user.uid}_${Date.now()}.${ext}`;
       const storageRef = ref(storage, `lastGoodbyes/${user.uid}/${fname}`);
@@ -148,9 +167,9 @@ export default function LastGoodbyes({ user }) {
     if (message?.mediaUrl) {
       // Delete file from storage
       try {
-        const segments = message.mediaUrl.split("/");
-        const name = decodeURIComponent(segments[segments.length - 1].split("?")[0]);
-        await deleteObject(ref(storage, `lastGoodbyes/${user.uid}/${name}`));
+        const urlParts = message.mediaUrl.split("/");
+        const fileName = decodeURIComponent(urlParts[urlParts.length - 1].split("?")[0]);
+        await deleteObject(ref(storage, `lastGoodbyes/${user.uid}/${fileName}`));
       } catch {}
     }
     await deleteDoc(refDoc);
@@ -196,7 +215,7 @@ export default function LastGoodbyes({ user }) {
               <audio src={message.mediaUrl} controls style={{ width: 240 }} />
             )}
             {message.type === "video" && message.mediaUrl && (
-              <video src={message.mediaUrl} controls style={{ maxWidth: 340, borderRadius: 13 }} />
+              <video src={message.mediaUrl} controls style={{ maxWidth: 340, borderRadius: 13 }} playsInline />
             )}
           </div>
           <button className="btn-main" style={{ marginRight: 12 }} onClick={startEdit}>Edit</button>
@@ -280,7 +299,7 @@ export default function LastGoodbyes({ user }) {
                     <audio src={previewUrl || mediaUrl} controls style={{ width: 220 }} />
                   )}
                   {type === "video" && (
-                    <video src={previewUrl || mediaUrl} controls style={{ width: 240, borderRadius: 10 }} />
+                    <video src={previewUrl || mediaUrl} controls style={{ width: 240, borderRadius: 10 }} playsInline />
                   )}
                 </div>
               )}
@@ -299,7 +318,7 @@ export default function LastGoodbyes({ user }) {
                 <audio src={previewUrl || mediaUrl} controls style={{ width: 220 }} />
               )}
               {type === "video" && (previewUrl || mediaUrl) && (
-                <video src={previewUrl || mediaUrl} controls style={{ width: 240, borderRadius: 10 }} />
+                <video src={previewUrl || mediaUrl} controls style={{ width: 240, borderRadius: 10 }} playsInline />
               )}
             </div>
           ) : null}
