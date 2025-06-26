@@ -40,6 +40,17 @@ function App() {
     return <Auth onLogin={setUser} />;
   }
 
+  function handleProfileUpdate(newProfile) {
+  // TODO: Update user profile in your backend/database here.
+  // For now, let's update the local user state so it reflects changes.
+  setUser(prev => ({
+    ...prev,
+    ...newProfile
+  }));
+  alert("Profile updated!\n" + JSON.stringify(newProfile, null, 2));
+}
+
+
   // Logout and Password Reset handlers (customize for your backend)
   function handleLogout() {
     // Add your logout logic (firebase signOut etc)
