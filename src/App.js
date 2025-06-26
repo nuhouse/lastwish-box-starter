@@ -38,6 +38,7 @@ function App() {
     return () => window.removeEventListener("resize", closeSidebarOnResize);
   }, []);
 
+  // Only accept user objects that have all fields!
   if (!user) {
     return <Auth onLogin={setUser} />;
   }
@@ -71,12 +72,11 @@ function App() {
       // Fetch the updated user
       const freshUserSnap = await getDoc(userRef);
       if (freshUserSnap.exists()) {
-        // Only setUser after save!
         setUser({
-          ...user,
           ...freshUserSnap.data(),
           uid: user.uid,
-          username: username
+          username: username,
+          email: freshUserSnap.data().email || user.email,
         });
       }
     } catch (e) {
@@ -87,7 +87,6 @@ function App() {
 
   function handleLogout() {
     setUser(null);
-    // No window.location.reload()!
   }
 
   function handlePasswordReset() {
