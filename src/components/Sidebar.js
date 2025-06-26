@@ -1,5 +1,7 @@
 import React, { useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
+import { sendPasswordResetEmail } from "firebase/auth";
+import { auth } from "../firebase";
 
 const menu = [
   {
@@ -56,50 +58,61 @@ const menu = [
   }
 ];
 
-export default function Sidebar({ open = false, onClose, user, onLogout, onPasswordReset }) {
+export default function Sidebar({ open = false, onClose, user }) {
   const location = useLocation();
   const navigate = useNavigate();
-  const [openMenu, setOpenMenu] = useState(null);
+  const [openMenus, setOpenMenus] = useState({});
 
+  // Accordion: Only one open at a time
   function toggleMenu(index) {
-    setOpenMenu(prev => (prev === index ? null : index));
+    setOpenMenus(prev => {
+      // If already open, close it; else open this and close others
+      const next = {};
+      if (!prev[index]) next[index] = true;
+      return next;
+    });
   }
+
   function isChildActive(children) {
     return children.some(child => location.pathname === child.path);
   }
+
   function handleLinkClick() {
     if (onClose) onClose();
   }
 
-  // --- PROFILE SECTION ---
-  function renderProfileSection() {
-    const initials = user.displayName
-      ? user.displayName.split(' ').map(n => n[0]).join('')
-      : (user.email ? user.email[0].toUpperCase() : '?');
-    return (
-      <div className="sidebar-profile">
-        <div className="sidebar-profile-avatar">{initials}</div>
-        <div className="sidebar-profile-details">
-          <div style={{ fontWeight: 500 }}>{user.displayName || user.name || user.email}</div>
-          <div style={{ color: "#a79cc4", fontSize: 13 }}>{user.email}</div>
-        </div>
-        <button className="btn-main" style={{ marginTop: 12, width: "100%" }} onClick={() => { navigate('/profile'); if (onClose) onClose(); }}>
-          Profile
-        </button>
-        <button className="btn-cancel" style={{ marginTop: 8, width: "100%" }} onClick={onPasswordReset}>
-          Reset Password
-        </button>
-        <button className="btn-danger" style={{ marginTop: 8, width: "100%" }} onClick={onLogout}>
-          Logout
-        </button>
-      </div>
-    );
+  // Password Reset Flow
+  function handlePasswordReset(email) {
+    if (!email) {
+      alert("No email found for this account.");
+      return;
+    }
+    if (window.confirm(`Send a password reset email to ${email}?`)) {
+      sendPasswordResetEmail(auth, email)
+        .then(() => {
+          alert(`A password reset email has been sent to ${email}.`);
+        })
+        .catch(err => {
+          alert("Failed to send reset email: " + err.message);
+        });
+    }
   }
 
+  // Optional: Logout function
+  function handleLogout() {
+    if (window.confirm("Log out?")) {
+      // You can call Firebase auth.signOut() here if desired
+      window.location.reload();
+    }
+  }
+
+  // Scrollable sidebar on mobile if needed
   return (
     <aside className={`sidebar-root${open ? " sidebar-open" : ""}`}>
-      <div className="sidebar-brand">Lastwish Box</div>
-      <nav style={{ flex: 1 }}>
+      <div className="sidebar-brand">
+        Lastwish Box
+      </div>
+      <nav style={{ flex: 1, overflowY: "auto", minHeight: 0 }}>
         <ul className="sidebar-list">
           {menu.map((item, i) => (
             <li key={item.label}>
@@ -108,7 +121,7 @@ export default function Sidebar({ open = false, onClose, user, onLogout, onPassw
                   <div
                     className={
                       "sidebar-parent" +
-                      (openMenu === i ? " open" : "") +
+                      (openMenus[i] ? " open" : "") +
                       (isChildActive(item.children) ? " active" : "")
                     }
                     onClick={() => toggleMenu(i)}
@@ -120,13 +133,13 @@ export default function Sidebar({ open = false, onClose, user, onLogout, onPassw
                         marginLeft: "auto",
                         fontSize: 18,
                         transition: "transform 0.2s",
-                        transform: openMenu === i ? "rotate(90deg)" : "rotate(0)"
+                        transform: openMenus[i] ? "rotate(90deg)" : "rotate(0)"
                       }}
                     >▶</span>
                   </div>
                   <ul
                     className="sidebar-children"
-                    style={{ display: openMenu === i || isChildActive(item.children) ? "block" : "none" }}
+                    style={{ display: openMenus[i] || isChildActive(item.children) ? "block" : "none" }}
                   >
                     {item.children.map(child => (
                       <li key={child.label}>
@@ -158,7 +171,33 @@ export default function Sidebar({ open = false, onClose, user, onLogout, onPassw
           ))}
         </ul>
       </nav>
-      {renderProfileSection()}
+
+      {/* Profile block at the bottom */}
+      <div className="sidebar-profile-block">
+        <div className="profile-email" style={{
+          fontSize: 14,
+          color: "#eee",
+          marginBottom: 7,
+          overflowWrap: "break-word"
+        }}>
+          <span style={{ fontWeight: 600 }}>{user?.name || user?.username || "User"}</span><br />
+          <span style={{ color: "#cdbce2" }}>{user?.email}</span>
+        </div>
+        <button
+          className="btn-main sidebar-reset"
+          style={{ marginBottom: 12, width: "100%" }}
+          onClick={() => handlePasswordReset(user?.email)}
+        >
+          Reset Password
+        </button>
+        <button
+          className="btn-cancel"
+          style={{ width: "100%" }}
+          onClick={handleLogout}
+        >
+          Logout
+        </button>
+      </div>
     </aside>
   );
 }
