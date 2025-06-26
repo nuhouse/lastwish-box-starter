@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 
+// Menu structure (edit as needed)
 const menu = [
   {
     label: "Home",
@@ -8,14 +9,14 @@ const menu = [
     icon: "🏠",
   },
   {
-  label: "Vaults",
-  icon: "🔒",
-  children: [
-    { label: "Password Vault", path: "/vaults/password-vault" },
-    { label: "Digital Platforms", path: "/vaults/digital-platforms" },
-    { label: "Devices", path: "/vaults/devices" }
-  ]
-},
+    label: "Vaults",
+    icon: "🔒",
+    children: [
+      { label: "Password Vault", path: "/vaults/password-vault" },
+      { label: "Digital Platforms", path: "/vaults/digital-platforms" },
+      { label: "Devices", path: "/vaults/devices" }
+    ]
+  },
   {
     label: "Messages",
     icon: "✉️",
@@ -56,101 +57,101 @@ const menu = [
   }
 ];
 
-export default function Sidebar() {
+export default function Sidebar({ open, onClose }) {
   const location = useLocation();
   const [openMenus, setOpenMenus] = useState({});
-  const [mobileOpen, setMobileOpen] = useState(false);
 
-  // Toggles accordion for parents
+  // Toggle accordion for parent menus
   function toggleMenu(index) {
     setOpenMenus(prev => ({ ...prev, [index]: !prev[index] }));
   }
 
-  // Mobile hamburger
-  function handleMobileToggle() {
-    setMobileOpen(v => !v);
-  }
-
-  // Close sidebar on link click (for mobile)
-  function handleLinkClick() {
-    setMobileOpen(false);
-  }
-
-  // Helper to check if any child is active for highlighting parent
+  // Helper to highlight parent if any child is active
   function isChildActive(children) {
     return children.some(child => location.pathname === child.path);
   }
 
+  // On link click (close sidebar if on mobile)
+  function handleLinkClick() {
+    if (onClose) onClose();
+  }
+
+  // Keyboard accessibility for menu accordions
+  function handleParentKeyDown(e, i) {
+    if (e.key === "Enter" || e.key === " ") {
+      toggleMenu(i);
+    }
+  }
+
   return (
-    <>
-      {/* Hamburger Icon for mobile */}
-      <div className="sidebar-mobile-toggle" onClick={handleMobileToggle}>
-        <span>&#9776;</span>
+    <aside className={`sidebar-root${open ? " sidebar-open" : ""}`}>
+      <div className="sidebar-brand">
+        Lastwish Box
       </div>
-      <aside className={`sidebar-root${mobileOpen ? " sidebar-open" : ""}`}>
-        <div className="sidebar-brand">
-          Lastwish Box
-        </div>
-        <nav>
-          <ul className="sidebar-list">
-            {menu.map((item, i) => (
-              <li key={item.label}>
-                {item.children ? (
-                  <>
-                    <div
-                      className={
-                        "sidebar-parent" +
-                        (openMenus[i] ? " open" : "") +
-                        (isChildActive(item.children) ? " active" : "")
-                      }
-                      onClick={() => toggleMenu(i)}
-                    >
-                      <span style={{ marginRight: 10 }}>{item.icon}</span>
-                      {item.label}
-                      <span
-                        style={{
-                          marginLeft: "auto",
-                          fontSize: 18,
-                          transition: "transform 0.2s",
-                          transform: openMenus[i] ? "rotate(90deg)" : "rotate(0)"
-                        }}
-                      >▶</span>
-                    </div>
-                    <ul
-                      className="sidebar-children"
-                      style={{ display: openMenus[i] || isChildActive(item.children) ? "block" : "none" }}
-                    >
-                      {item.children.map(child => (
-                        <li key={child.label}>
-                          <Link
-                            to={child.path}
-                            onClick={handleLinkClick}
-                            className={location.pathname === child.path ? "active" : ""}
-                          >
-                            {child.label}
-                          </Link>
-                        </li>
-                      ))}
-                    </ul>
-                  </>
-                ) : (
-                  <Link
-                    to={item.path}
-                    onClick={handleLinkClick}
+      <nav>
+        <ul className="sidebar-list">
+          {menu.map((item, i) => (
+            <li key={item.label}>
+              {item.children ? (
+                <>
+                  <div
                     className={
-                      "sidebar-single" +
-                      (location.pathname === item.path ? " active" : "")
+                      "sidebar-parent" +
+                      (openMenus[i] ? " open" : "") +
+                      (isChildActive(item.children) ? " active" : "")
                     }
+                    tabIndex={0}
+                    onClick={() => toggleMenu(i)}
+                    onKeyDown={e => handleParentKeyDown(e, i)}
+                    aria-expanded={!!openMenus[i]}
+                    aria-label={item.label}
                   >
                     <span style={{ marginRight: 10 }}>{item.icon}</span>
                     {item.label}
-                  </Link>
-                )}
-              </li>
-            ))}
-          </ul>
-        </nav>
-      </aside>
-    </>
+                    <span
+                      style={{
+                        marginLeft: "auto",
+                        fontSize: 18,
+                        transition: "transform 0.2s",
+                        transform: openMenus[i] ? "rotate(90deg)" : "rotate(0)"
+                      }}
+                      aria-hidden="true"
+                    >▶</span>
+                  </div>
+                  <ul
+                    className="sidebar-children"
+                    style={{ display: openMenus[i] || isChildActive(item.children) ? "block" : "none" }}
+                  >
+                    {item.children.map(child => (
+                      <li key={child.label}>
+                        <Link
+                          to={child.path}
+                          onClick={handleLinkClick}
+                          className={location.pathname === child.path ? "active" : ""}
+                        >
+                          {child.label}
+                        </Link>
+                      </li>
+                    ))}
+                  </ul>
+                </>
+              ) : (
+                <Link
+                  to={item.path}
+                  onClick={handleLinkClick}
+                  className={
+                    "sidebar-single" +
+                    (location.pathname === item.path ? " active" : "")
+                  }
+                >
+                  <span style={{ marginRight: 10 }}>{item.icon}</span>
+                  {item.label}
+                </Link>
+              )}
+            </li>
+          ))}
+        </ul>
+      </nav>
+    </aside>
   );
 }
