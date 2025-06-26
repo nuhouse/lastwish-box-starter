@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import { db, storage } from "../firebase";
 import {
-  doc, getDoc, setDoc, updateDoc, deleteDoc
+  doc, getDoc, setDoc, deleteDoc
 } from "firebase/firestore";
 import {
   ref, uploadBytesResumable, getDownloadURL, deleteObject
@@ -23,8 +23,6 @@ export default function LastGoodbyes({ user }) {
   const [error, setError] = useState("");
   const fileInput = useRef();
   const videoRef = useRef();
-
-  // Use a ref for recording chunks (state not reliable in async)
   const chunksRef = useRef([]);
 
   // Load existing message
@@ -165,20 +163,18 @@ export default function LastGoodbyes({ user }) {
     if (!window.confirm("Delete your Last Goodbye?")) return;
     const refDoc = doc(db, "lastGoodbyes", user.uid);
     if (message?.mediaUrl) {
-      // Delete file from storage
       try {
-  // Parse the file path from the download URL:
-  // e.g. .../o/lastGoodbyes%2F{uid}%2F1750931944807.webm?alt=media...
-  const url = new URL(message.mediaUrl);
-  const pathname = url.pathname; // /v0/b/xxx.appspot.com/o/lastGoodbyes%2Fuid%2Ffilename.webm
-  let fullPath = decodeURIComponent(pathname.split("/o/")[1] || "");
-  // Remove any query params (just in case)
-  if (fullPath.includes("?")) fullPath = fullPath.split("?")[0];
-  await deleteObject(ref(storage, fullPath));
-} catch (err) {
-  // If the file is already gone (404), ignore!
-}
-
+        // Parse the file path from the download URL
+        const url = new URL(message.mediaUrl);
+        const pathname = url.pathname; // /v0/b/xxx.appspot.com/o/lastGoodbyes%2Fuid%2Ffilename.webm
+        let fullPath = decodeURIComponent(pathname.split("/o/")[1] || "");
+        // Remove any query params (just in case)
+        if (fullPath.includes("?")) fullPath = fullPath.split("?")[0];
+        await deleteObject(ref(storage, fullPath));
+      } catch (err) {
+        // Ignore file not found
+      }
+    }
     await deleteDoc(refDoc);
     setMessage(null);
     setEditing(true);
@@ -270,7 +266,6 @@ export default function LastGoodbyes({ user }) {
             />
           )}
 
-          {/* Audio/Video recording/upload */}
           {["audio", "video"].includes(type) && (
             <div style={{ marginBottom: 10 }}>
               {!file && !mediaUrl && !recording && (
@@ -313,7 +308,6 @@ export default function LastGoodbyes({ user }) {
             </div>
           )}
 
-          {/* PREVIEW */}
           {(type === "text" && text.trim()) ||
            (["audio", "video"].includes(type) && (previewUrl || mediaUrl)) ? (
             <div className="card" style={{ background: "#f9f7fc", margin: "14px 0", border: "1px solid #8cade1" }}>
