@@ -32,7 +32,7 @@ function App() {
   const [user, setUser] = useState(null);
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
-  // On route/page change, close mobile sidebar
+  // Auto-close sidebar when window is resized to desktop
   useEffect(() => {
     const closeSidebarOnResize = () => {
       if (window.innerWidth >= 900) setSidebarOpen(false);
@@ -48,10 +48,10 @@ function App() {
   return (
     <Router>
       <div className="app-root">
-        {/* Sidebar gets open/onClose props for mobile */}
+        {/* Sidebar */}
         <Sidebar open={sidebarOpen} onClose={() => setSidebarOpen(false)} />
 
-        {/* Overlay on mobile when sidebar is open */}
+        {/* Overlay for mobile when sidebar is open */}
         {sidebarOpen && (
           <div
             className="sidebar-overlay"
@@ -68,20 +68,29 @@ function App() {
         )}
 
         <div className="content">
-          <div className="app-header" style={{ position: "sticky", top: 0, zIndex: 100 }}>
+          {/* Header */}
+          <div className="app-header" style={{ position: "sticky", top: 0, zIndex: 100, background: "#fff" }}>
             <div className="header-left" style={{ display: "flex", alignItems: "center" }}>
-              <img src="/logo-placeholder.png" alt="Logo" className="header-logo" style={{ width: 40, height: 40, marginRight: 10 }} />
-              <span className="header-title" style={{
-                fontWeight: "bold",
-                fontSize: "1.2rem",
-                letterSpacing: 1,
-                color: "#2a0516",
-                lineHeight: 1
-              }}>
+              <img
+                src="/logo-placeholder.png"
+                alt="Logo"
+                className="header-logo"
+                style={{ width: 40, height: 40, marginRight: 10 }}
+              />
+              <span
+                className="header-title"
+                style={{
+                  fontWeight: "bold",
+                  fontSize: "1.2rem",
+                  letterSpacing: 1,
+                  color: "#2a0516",
+                  lineHeight: 1
+                }}
+              >
                 Lastwish Box
               </span>
             </div>
-            {/* Hamburger: only visible on mobile */}
+            {/* Hamburger menu (mobile only) */}
             <button
               className="hamburger-menu"
               aria-label="Open menu"
@@ -90,8 +99,7 @@ function App() {
                 marginLeft: "auto",
                 background: "none",
                 border: "none",
-                cursor: "pointer",
-                display: "none"
+                cursor: "pointer"
               }}
             >
               <span className="bar"></span>
@@ -130,7 +138,7 @@ function App() {
         </div>
       </div>
 
-      {/* Hamburger visible only on mobile (CSS handles display) */}
+      {/* Hamburger menu styles */}
       <style>{`
         .hamburger-menu {
           display: none;
