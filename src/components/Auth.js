@@ -5,7 +5,10 @@ import { doc, getDoc, setDoc } from "firebase/firestore";
 import { db } from "../firebase"; // adjust path if needed
 
 export default function Auth({ onLogin }) {
-  // ...rest of your code...
+  const [isRegister, setIsRegister] = useState(false);
+  const [email, setEmail] = useState("");
+  const [pw, setPw] = useState("");
+  const [err, setErr] = useState("");
 
   const hydrateAndLogin = async (authUser) => {
     // Try get Firestore profile for this user
