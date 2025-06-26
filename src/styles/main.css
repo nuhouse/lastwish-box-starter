@@ -405,5 +405,104 @@ body, #root, .app-root, .content {
     padding-bottom: calc(18px + env(safe-area-inset-bottom, 0px));
   }
 }
+.profile-page-wrapper {
+  min-height: 100vh;
+  background: #f7f6fa;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 32px 8px 0 8px;
+}
+
+.profile-card {
+  width: 100%;
+  max-width: 420px;
+  background: #24111b;
+  color: #eee;
+  border-radius: 18px;
+  box-shadow: 0 4px 22px 0 #22091a16;
+  padding: 26px 22px 22px 22px;
+  margin: 0 auto;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+}
+
+.profile-card h2 {
+  color: #8cade1;
+  font-size: 1.4em;
+  margin-bottom: 14px;
+  text-align: center;
+  font-weight: bold;
+  letter-spacing: 1px;
+}
+
+.profile-row {
+  margin-bottom: 11px;
+}
+
+.profile-row label {
+  font-size: 1em;
+  font-weight: 600;
+  color: #b2bbd1;
+  display: block;
+  margin-bottom: 2px;
+}
+
+.profile-row input {
+  width: 100%;
+  border: 1.2px solid #5d4a67;
+  border-radius: 7px;
+  background: #39234b;
+  color: #fff;
+  padding: 9px 10px;
+  font-size: 1em;
+  margin-top: 3px;
+}
+
+.profile-row input:disabled {
+  background: #2a0516;
+  color: #c0bdd1;
+  opacity: 1;
+  font-weight: 700;
+}
+
+.profile-value {
+  padding: 7px 4px 0 0;
+  color: #fff;
+  font-size: 1.06em;
+}
+
+.profile-placeholder {
+  color: #888;
+  font-style: italic;
+}
+
+.profile-actions {
+  display: flex;
+  gap: 8px;
+  margin: 16px 0 0 0;
+}
+
+.profile-logout {
+  width: 100%;
+  margin-top: 20px;
+  padding: 11px 0;
+  font-size: 1em;
+  border-radius: 8px;
+}
+
+@media (max-width: 700px) {
+  .profile-card {
+    padding-bottom: calc(22px + env(safe-area-inset-bottom, 0px));
+  }
+  .profile-page-wrapper {
+    padding: 18px 3vw 0 3vw;
+  }
+  .profile-logout {
+    margin-bottom: env(safe-area-inset-bottom, 12px);
+  }
+}
 
 
