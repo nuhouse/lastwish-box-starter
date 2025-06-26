@@ -8,17 +8,9 @@ import {
   ref, uploadBytesResumable, getDownloadURL, deleteObject
 } from "firebase/storage";
 
-// --- Phone and Computer Makes ---
-const PHONE_MAKES = [
-  "Apple", "Samsung", "Google", "Huawei", "Xiaomi", "OnePlus", "Sony",
-  "Nokia", "Motorola", "Oppo", "Vivo", "LG", "Realme", "Asus", "Honor", "Other"
-];
-const COMPUTER_MAKES = [
-  "Apple", "Dell", "HP", "Lenovo", "Asus", "Acer", "Microsoft", "Razer",
-  "MSI", "Samsung", "Toshiba", "Huawei", "LG", "Sony", "Other"
-];
+const PHONE_MAKES = [/* ... */];
+const COMPUTER_MAKES = [/* ... */];
 
-// --- Utilities ---
 function getDeviceImageType(file) {
   if (!file) return null;
   if (file.type.startsWith("image/")) return "image";
@@ -28,14 +20,13 @@ function getDeviceImageType(file) {
 export default function Devices({ user }) {
   const [devices, setDevices] = useState([]);
   const [showForm, setShowForm] = useState(false);
-  const [formType, setFormType] = useState("phone"); // phone | computer
+  const [formType, setFormType] = useState("phone");
   const [form, setForm] = useState(defaultForm("phone", user?.uid));
   const [uploading, setUploading] = useState(false);
   const [editingId, setEditingId] = useState(null);
   const [contacts, setContacts] = useState([]);
   const fileInput = useRef();
 
-  // --- Fetch devices
   useEffect(() => {
     if (!user) return;
     const q = query(
@@ -49,20 +40,15 @@ export default function Devices({ user }) {
     return unsub;
   }, [user]);
 
-  // --- Fetch contacts for dropdown
   useEffect(() => {
     if (!user) return;
-    const q = query(
-      collection(db, "contacts"),
-      where("uid", "==", user.uid)
-    );
+    const q = query(collection(db, "contacts"), where("uid", "==", user.uid));
     const unsub = onSnapshot(q, snap => {
       setContacts(snap.docs.map(d => ({ id: d.id, ...d.data() })));
     });
     return unsub;
   }, [user]);
 
-  // --- Helpers for Form Defaults
   function defaultForm(type = "phone", uid = user?.uid) {
     return {
       uid,
@@ -71,20 +57,16 @@ export default function Devices({ user }) {
       make: "",
       imageUrl: "",
       imageName: "",
-      // Phone
       phoneNumber: "",
       phonePasscode: "",
-      // Computer
       username: "",
       loginPassword: "",
-      // Both
       contact: "",
       notes: "",
       created: null
     };
   }
 
-  // --- Show Form (Create/Edit)
   function openForm(type = "phone", device = null) {
     setShowForm(true);
     setFormType(type);
@@ -103,20 +85,15 @@ export default function Devices({ user }) {
     setEditingId(null);
     if (fileInput.current) fileInput.current.value = "";
   }
-
-  // --- Handle input changes
   function handleInput(e) {
     const { name, value } = e.target;
     setForm(f => ({ ...f, [name]: value }));
   }
-
-  // --- Confirm Password/Passcode check
   const [confirm, setConfirm] = useState("");
   const passValid = formType === "phone"
     ? (form.phonePasscode === confirm)
     : (form.loginPassword === confirm);
 
-  // --- Handle Image Upload (camera or file)
   async function handleImage(e) {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -135,20 +112,16 @@ export default function Devices({ user }) {
       setUploading(false);
     }
   }
-
-  // --- Save Device (add or update)
   async function handleSubmit(e) {
     e.preventDefault();
     setUploading(true);
     try {
       if (editingId) {
-        // Update
         await updateDoc(doc(db, "devices", editingId), {
           ...form,
           updated: serverTimestamp()
         });
       } else {
-        // Add
         await addDoc(collection(db, "devices"), {
           ...form,
           created: serverTimestamp()
@@ -160,377 +133,256 @@ export default function Devices({ user }) {
     }
     setUploading(false);
   }
-
-  // --- Delete Device
   async function handleDelete() {
     if (!editingId) return;
     if (window.confirm("Delete this device?")) {
       if (form.imageUrl && form.imageName) {
         try {
           await deleteObject(ref(storage, `devices/${user.uid}/${form.imageName}`));
-        } catch (e) { /* ignore */ }
+        } catch (e) { }
       }
       await deleteDoc(doc(db, "devices", editingId));
       closeForm();
     }
   }
-
-  // --- Show camera only if on mobile
   function isMobile() {
     return /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
   }
-
-  // --- Render Form (***NO overlay here***)
-  function renderForm() {
-    const isPhone = formType === "phone";
-    return (
-      <form
-  className="device-form"
-  onSubmit={handleSubmit}
-  style={{ minWidth: 310, maxWidth: 370 }}
->
-  <h3 style={{ marginBottom: 10 }}>
-    {editingId ? "Edit Device" : "Add Device"}
-  </h3>
-  {/* Nickname */}
-  <input
-    name="nickname"
-    type="text"
-    value={form.nickname}
-    onChange={handleInput}
-    required
-    maxLength={40}
-    placeholder="Device Nickname (e.g. Dad's MacBook, Work iPhone)"
-  />
-
-  {/* Make */}
-  <select
-    name="make"
-    value={form.make}
-    onChange={handleInput}
-    required
-    style={{ marginBottom: 12 }}
-  >
-    <option value="">Select Make</option>
-    {(formType === "phone" ? PHONE_MAKES : COMPUTER_MAKES).map(make =>
-      <option key={make} value={make}>{make}</option>
-    )}
-  </select>
-
-  {/* Phone/Computer Specific */}
-  {formType === "phone" ? (
-    <>
-      <input
-        name="phoneNumber"
-        type="text"
-        value={form.phoneNumber}
-        onChange={handleInput}
-        maxLength={18}
-        placeholder="Phone Number"
-      />
-      <input
-        name="phonePasscode"
-        type="password"
-        value={form.phonePasscode}
-        onChange={handleInput}
-        minLength={4}
-        maxLength={18}
-        autoComplete="new-password"
-        placeholder="Phone Passcode"
-      />
-      <input
-        type="password"
-        value={confirm}
-        onChange={e => setConfirm(e.target.value)}
-        minLength={4}
-        maxLength={18}
-        autoComplete="new-password"
-        required
-        placeholder="Confirm Passcode"
-      />
-      {confirm && !passValid && (
-        <span style={{ color: "#b40000", fontSize: 13 }}>
-          Passcodes do not match.
-        </span>
-      )}
-    </>
-  ) : (
-    <>
-      <input
-        name="username"
-        type="text"
-        value={form.username}
-        onChange={handleInput}
-        maxLength={24}
-        placeholder="Computer Username"
-      />
-      <input
-        name="loginPassword"
-        type="password"
-        value={form.loginPassword}
-        onChange={handleInput}
-        minLength={4}
-        maxLength={30}
-        autoComplete="new-password"
-        placeholder="Computer Password"
-      />
-      <input
-        type="password"
-        value={confirm}
-        onChange={e => setConfirm(e.target.value)}
-        minLength={4}
-        maxLength={30}
-        autoComplete="new-password"
-        required
-        placeholder="Confirm Password"
-      />
-      {confirm && !passValid && (
-        <span style={{ color: "#b40000", fontSize: 13 }}>
-          Passwords do not match.
-        </span>
-      )}
-    </>
-  )}
-
-  {/* Contact */}
-  <select
-    name="contact"
-    value={form.contact}
-    onChange={handleInput}
-    required
-    style={{ marginBottom: 12 }}
-  >
-    <option value="">Select Contact</option>
-    {contacts.map(c => (
-      <option key={c.id} value={c.id}>{c.name}</option>
-    ))}
-  </select>
-
-  {/* Notes */}
-  <textarea
-    name="notes"
-    value={form.notes}
-    onChange={handleInput}
-    rows={3}
-    maxLength={300}
-    style={{ resize: "vertical" }}
-    placeholder="Notes / Wishes (how to handle this device)"
-  />
-
-  {/* Image */}
-  <div style={{ marginBottom: 8 }}>
-    <span style={{ fontSize: 13, color: "#746e80" }}>Device Image</span>
-    {isMobile() ? (
-      <input
-        ref={fileInput}
-        name="image"
-        type="file"
-        accept="image/*"
-        capture="environment"
-        onChange={handleImage}
-        style={{ marginTop: 4 }}
-      />
-    ) : (
-      <input
-        ref={fileInput}
-        name="image"
-        type="file"
-        accept="image/*"
-        onChange={handleImage}
-        style={{ marginTop: 4 }}
-      />
-    )}
-    {form.imageUrl && (
-      <img
-        src={form.imageUrl}
-        alt="Device"
-        style={{
-          width: 80, height: 80, objectFit: "cover",
-          display: "block", margin: "10px 0", borderRadius: 8
-        }}
-      />
-    )}
-  </div>
-
-  <div style={{ marginTop: 15, display: "flex", gap: 10 }}>
-    <button
-      type="submit"
-      className="btn"
-      disabled={uploading || (confirm && !passValid)}
-      style={{ background: "#2a0516", color: "#fff", flex: 1 }}
-    >
-      {editingId ? "Update" : "Add"}
-    </button>
-    {editingId && (
-      <button
-        type="button"
-        className="btn"
-        style={{ background: "#9a1818", color: "#fff" }}
-        onClick={handleDelete}
-      >
-        Delete
-      </button>
-    )}
-    <button
-      type="button"
-      className="btn"
-      style={{ background: "#ccc", color: "#222" }}
-      onClick={closeForm}
-    >
-      Cancel
-    </button>
-  </div>
-</form>
-    );
-  }
-
-  // --- Render Devices List
   function getContactName(id) {
     return contacts.find(c => c.id === id)?.name || "";
   }
 
-  return (
-    <div style={{ maxWidth: 800, margin: "0 auto", padding: "16px 10px 35px 10px" }}>
-      <h2 style={{ margin: "16px 0 18px 0" }}>Devices</h2>
-      <div style={{ marginBottom: 18 }}>
-        <button
-          className="btn"
-          onClick={() => openForm("phone")}
-          style={{ marginRight: 13, background: "#2a0516", color: "#fff" }}
+  // --- Render Form (uses main.css only, no inline/modal styles)
+  function renderForm() {
+    const isPhone = formType === "phone";
+    return (
+      <form className="card" style={{ maxWidth: 400 }} onSubmit={handleSubmit}>
+        <h3 style={{ marginBottom: 10 }}>
+          {editingId ? "Edit Device" : "Add Device"}
+        </h3>
+        <input
+          name="nickname"
+          type="text"
+          value={form.nickname}
+          onChange={handleInput}
+          required
+          maxLength={40}
+          placeholder="Device Nickname (e.g. Dad's MacBook, Work iPhone)"
+        />
+        <select
+          name="make"
+          value={form.make}
+          onChange={handleInput}
+          required
         >
+          <option value="">Select Make</option>
+          {(isPhone ? PHONE_MAKES : COMPUTER_MAKES).map(make =>
+            <option key={make} value={make}>{make}</option>
+          )}
+        </select>
+        {isPhone ? (
+          <>
+            <input
+              name="phoneNumber"
+              type="text"
+              value={form.phoneNumber}
+              onChange={handleInput}
+              maxLength={18}
+              placeholder="Phone Number"
+            />
+            <input
+              name="phonePasscode"
+              type="password"
+              value={form.phonePasscode}
+              onChange={handleInput}
+              minLength={4}
+              maxLength={18}
+              autoComplete="new-password"
+              placeholder="Phone Passcode"
+            />
+            <input
+              type="password"
+              value={confirm}
+              onChange={e => setConfirm(e.target.value)}
+              minLength={4}
+              maxLength={18}
+              autoComplete="new-password"
+              required
+              placeholder="Confirm Passcode"
+            />
+            {confirm && !passValid && (
+              <span style={{ color: "#b40000", fontSize: 13 }}>
+                Passcodes do not match.
+              </span>
+            )}
+          </>
+        ) : (
+          <>
+            <input
+              name="username"
+              type="text"
+              value={form.username}
+              onChange={handleInput}
+              maxLength={24}
+              placeholder="Computer Username"
+            />
+            <input
+              name="loginPassword"
+              type="password"
+              value={form.loginPassword}
+              onChange={handleInput}
+              minLength={4}
+              maxLength={30}
+              autoComplete="new-password"
+              placeholder="Computer Password"
+            />
+            <input
+              type="password"
+              value={confirm}
+              onChange={e => setConfirm(e.target.value)}
+              minLength={4}
+              maxLength={30}
+              autoComplete="new-password"
+              required
+              placeholder="Confirm Password"
+            />
+            {confirm && !passValid && (
+              <span style={{ color: "#b40000", fontSize: 13 }}>
+                Passwords do not match.
+              </span>
+            )}
+          </>
+        )}
+        <select
+          name="contact"
+          value={form.contact}
+          onChange={handleInput}
+          required
+        >
+          <option value="">Select Contact</option>
+          {contacts.map(c => (
+            <option key={c.id} value={c.id}>{c.name}</option>
+          ))}
+        </select>
+        <textarea
+          name="notes"
+          value={form.notes}
+          onChange={handleInput}
+          rows={3}
+          maxLength={300}
+          placeholder="Notes / Wishes (how to handle this device)"
+        />
+        <div>
+          <span style={{ fontSize: 13, color: "#746e80" }}>Device Image</span>
+          <input
+            ref={fileInput}
+            name="image"
+            type="file"
+            accept="image/*"
+            onChange={handleImage}
+            style={{ marginTop: 4 }}
+          />
+          {form.imageUrl && (
+            <img
+              src={form.imageUrl}
+              alt="Device"
+              style={{
+                width: 80, height: 80, objectFit: "cover",
+                display: "block", margin: "10px 0", borderRadius: 8
+              }}
+            />
+          )}
+        </div>
+        <div style={{ marginTop: 15, display: "flex", gap: 10 }}>
+          <button
+            type="submit"
+            className="btn-main"
+            disabled={uploading || (confirm && !passValid)}
+            style={{ flex: 1 }}
+          >
+            {editingId ? "Update" : "Add"}
+          </button>
+          {editingId && (
+            <button
+              type="button"
+              className="btn-danger"
+              onClick={handleDelete}
+            >
+              Delete
+            </button>
+          )}
+          <button
+            type="button"
+            className="btn-cancel"
+            onClick={closeForm}
+          >
+            Cancel
+          </button>
+        </div>
+      </form>
+    );
+  }
+
+  return (
+    <div>
+      <h2 style={{ margin: "18px 0" }}>Devices</h2>
+      <div style={{ marginBottom: 18 }}>
+        <button className="btn-main" onClick={() => openForm("phone")} style={{ marginRight: 13 }}>
           Add Phone
         </button>
-        <button
-          className="btn"
-          onClick={() => openForm("computer")}
-          style={{ background: "#2a0516", color: "#fff" }}
-        >
+        <button className="btn-main" onClick={() => openForm("computer")}>
           Add Computer
         </button>
       </div>
-      <div style={{
-        border: "1px solid #eee",
-        borderRadius: 12,
-        padding: 12,
-        background: "#faf8fb"
-      }}>
+      <div className="page-grid">
         {devices.length === 0 ? (
           <div style={{ color: "#9d8ba7", textAlign: "center", fontSize: 18, padding: 16 }}>
             No devices yet.
           </div>
         ) : (
-          <div>
-            {devices.map(device => (
-              <div key={device.id} style={{
-                display: "flex", alignItems: "center", gap: 11,
-                borderBottom: "1px solid #f1e8ee",
-                padding: "11px 0"
-              }}>
-                {/* Thumbnail */}
-                {device.imageUrl
-                  ? <img src={device.imageUrl} alt="" style={{ width: 38, height: 38, objectFit: "cover", borderRadius: 8, border: "1px solid #e0d2d6" }} />
-                  : <span style={{ width: 38, height: 38, display: "inline-block", background: "#e8e1ee", borderRadius: 8 }} />}
-                {/* Nickname, Type, Make */}
-                <div style={{ flex: 1 }}>
-                  <div style={{ fontWeight: 600, fontSize: 16 }}>
-                    {device.nickname} <span style={{
-                      fontWeight: 400,
-                      fontSize: 14,
-                      color: "#a56bee",
-                      marginLeft: 7
-                    }}>
-                      ({device.type.charAt(0).toUpperCase() + device.type.slice(1)})
-                    </span>
-                  </div>
-                  <div style={{ fontSize: 14, color: "#7a5d7a" }}>
-                    {device.make} — Contact: <span style={{ fontWeight: 600 }}>
-                      {getContactName(device.contact)}
-                    </span>
-                  </div>
-                  <div style={{ fontSize: 13, color: "#8a8a99" }}>
-                    {device.notes}
-                  </div>
-                </div>
-                {/* Edit */}
-                <button
-                  onClick={() => openForm(device.type, device)}
-                  style={{
-                    background: "none",
-                    border: "none",
-                    padding: 5,
-                    cursor: "pointer"
-                  }}
-                  title="Edit"
-                >
-                  <span role="img" aria-label="edit" style={{ fontSize: 20 }}>✏️</span>
-                </button>
+          devices.map(device => (
+            <div className="card" key={device.id}>
+              {/* Thumbnail */}
+              {device.imageUrl
+                ? <img src={device.imageUrl} alt="" style={{ width: 38, height: 38, objectFit: "cover", borderRadius: 8, border: "1px solid #e0d2d6" }} />
+                : <span style={{ width: 38, height: 38, display: "inline-block", background: "#e8e1ee", borderRadius: 8 }} />}
+              <div style={{ fontWeight: 600, fontSize: 16 }}>
+                {device.nickname} <span style={{
+                  fontWeight: 400,
+                  fontSize: 14,
+                  color: "#a56bee",
+                  marginLeft: 7
+                }}>
+                  ({device.type.charAt(0).toUpperCase() + device.type.slice(1)})
+                </span>
               </div>
-            ))}
-          </div>
+              <div style={{ fontSize: 14, color: "#7a5d7a" }}>
+                {device.make} — Contact: <span style={{ fontWeight: 600 }}>
+                  {getContactName(device.contact)}
+                </span>
+              </div>
+              <div style={{ fontSize: 13, color: "#8a8a99" }}>
+                {device.notes}
+              </div>
+              <button
+                onClick={() => openForm(device.type, device)}
+                className="btn-main"
+                style={{ marginTop: 10, fontSize: 15, padding: "6px 15px" }}
+              >
+                Edit
+              </button>
+            </div>
+          ))
         )}
       </div>
+      {/* Modal Form */}
       {showForm && (
         <div className="modal-overlay">
-          <div className="device-modal-box">
+          <div className="card" style={{ maxWidth: 440, width: "96vw" }}>
             {renderForm()}
           </div>
         </div>
       )}
-      <style>{`
-        .modal-overlay {
-          position: fixed;
-          left: 0; top: 0; right: 0; bottom: 0;
-          background: #26192679;
-          z-index: 1202;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-        }
-        .device-modal-box {
-          background: #fff;
-          border-radius: 18px;
-          padding: 20px;
-          max-width: 480px;
-          width: 96vw;
-          box-shadow: 0 8px 36px 0 #2a05162a;
-          position: relative;
-          display: flex;
-          flex-direction: column;
-          gap: 14px;
-          max-height: 96vh;
-          overflow-y: auto;
-        }
-        .device-form {
-          width: 100%;
-          display: flex;
-          flex-direction: column;
-          gap: 10px;
-        }
-        .device-form label {
-          display: block;
-          margin-bottom: 12px;
-          font-weight: 500;
-        }
-        .device-form input, .device-form select, .device-form textarea {
-          width: 100%;
-          margin-top: 5px;
-          margin-bottom: 6px;
-          border: 1px solid #cdbad7;
-          border-radius: 6px;
-          padding: 7px 9px;
-          font-size: 1em;
-          background: #fff;
-        }
-        .device-form textarea { min-height: 38px; }
-        .device-form .btn {
-          border: none;
-          border-radius: 5px;
-          padding: 9px 15px;
-          font-weight: 600;
-          cursor: pointer;
-          margin-right: 3px;
-        }
-      `}</style>
     </div>
   );
 }
