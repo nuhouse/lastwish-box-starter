@@ -1,7 +1,7 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import { db, storage } from "../firebase";
 import {
-  collection, addDoc, query, where, orderBy, onSnapshot, deleteDoc, doc, serverTimestamp
+  collection, addDoc, query, where, orderBy, onSnapshot, updateDoc, deleteDoc, doc, serverTimestamp
 } from "firebase/firestore";
 import {
   ref, uploadBytesResumable, getDownloadURL, deleteObject
@@ -10,17 +10,20 @@ import {
 export default function Videos({ user }) {
   const [videos, setVideos] = useState([]);
   const [showForm, setShowForm] = useState(false);
-  const [form, setForm] = useState({ title: "", description: "", file: null });
+  const [note, setNote] = useState("");
+  const [file, setFile] = useState(null);
   const [uploading, setUploading] = useState(false);
-  const [previewUrl, setPreviewUrl] = useState("");
-  const [recording, setRecording] = useState(false);
   const [mediaStream, setMediaStream] = useState(null);
   const [mediaRecorder, setMediaRecorder] = useState(null);
+  const [recording, setRecording] = useState(false);
   const [chunks, setChunks] = useState([]);
-  const fileInput = useRef();
+  const [previewUrl, setPreviewUrl] = useState(null);
+  const [editId, setEditId] = useState(null);
+  const [error, setError] = useState("");
+
   const videoRef = useRef();
 
-  // Fetch user's videos
+  // Fetch videos from Firestore
   useEffect(() => {
     if (!user) return;
     const q = query(
@@ -28,121 +31,115 @@ export default function Videos({ user }) {
       where("uid", "==", user.uid),
       orderBy("created", "desc")
     );
-    const unsub = onSnapshot(q, snap => {
-      setVideos(snap.docs.map(d => ({ id: d.id, ...d.data() })));
+    return onSnapshot(q, snap => {
+      setVideos(snap.docs.map(doc => ({ id: doc.id, ...doc.data() })));
     });
-    return unsub;
   }, [user]);
 
-  // Cleanup blob when file changes
+  // Cleanup preview URL
   useEffect(() => {
-    if (!form.file) return;
-    const url = URL.createObjectURL(form.file);
+    if (!file) return;
+    const url = URL.createObjectURL(file);
     setPreviewUrl(url);
     return () => URL.revokeObjectURL(url);
-  }, [form.file]);
+  }, [file]);
 
-  // Set videoRef srcObject for live camera preview
-  useEffect(() => {
-    if (recording && videoRef.current && mediaStream) {
-      videoRef.current.srcObject = mediaStream;
-    }
-    return () => {
-      if (videoRef.current) videoRef.current.srcObject = null;
-    };
-  }, [recording, mediaStream]);
-
-  function openForm() {
-    setForm({ title: "", description: "", file: null });
-    setPreviewUrl("");
-    setShowForm(true);
-    setRecording(false);
-    stopMediaTracks();
-    if (fileInput.current) fileInput.current.value = "";
-  }
-  function closeForm() {
-    setShowForm(false);
-    setForm({ title: "", description: "", file: null });
-    setPreviewUrl("");
-    setRecording(false);
-    stopMediaTracks();
-    if (fileInput.current) fileInput.current.value = "";
-  }
+  // Cleanup media stream
   function stopMediaTracks() {
     if (mediaStream) {
       mediaStream.getTracks().forEach(track => track.stop());
       setMediaStream(null);
     }
-    if (mediaRecorder) {
-      mediaRecorder.stop();
-      setMediaRecorder(null);
-    }
-    setChunks([]);
-  }
-
-  function handleChange(e) {
-    setForm(f => ({ ...f, [e.target.name]: e.target.value }));
-  }
-  function handleFile(e) {
-    setForm(f => ({ ...f, file: e.target.files[0] }));
+    setMediaRecorder(null);
     setRecording(false);
-    stopMediaTracks();
+    setChunks([]);
   }
 
-  // Start camera and recording
+  // Recording logic
   async function startRecording() {
-    setChunks([]);
-    setPreviewUrl("");
+    setError("");
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
       setMediaStream(stream);
-      const mr = new window.MediaRecorder(stream, { mimeType: "video/webm" });
-      setMediaRecorder(mr);
-      mr.ondataavailable = e => setChunks(chs => [...chs, e.data]);
-      mr.onstop = () => {
-        const blob = new Blob(chunks, { type: "video/webm" });
-        const file = new File([blob], `video_${Date.now()}.webm`, { type: blob.type });
-        setForm(f => ({ ...f, file }));
-        setPreviewUrl(URL.createObjectURL(file));
-        setRecording(false);
-        setMediaStream(null);
-        setMediaRecorder(null);
-        setChunks([]);
+      const recorder = new window.MediaRecorder(stream, { mimeType: "video/webm" });
+      let chunksLocal = [];
+      recorder.ondataavailable = e => {
+        if (e.data.size > 0) chunksLocal.push(e.data);
       };
-      mr.start();
+      recorder.onstop = () => {
+        if (chunksLocal.length === 0) {
+          setError("Recording failed: no data captured.");
+          return;
+        }
+        const blob = new Blob(chunksLocal, { type: "video/webm" });
+        setFile(new File([blob], `video_${Date.now()}.webm`, { type: "video/webm" }));
+        setPreviewUrl(URL.createObjectURL(blob));
+        stopMediaTracks();
+      };
+      setChunks([]);
+      setMediaRecorder(recorder);
       setRecording(true);
+      recorder.start();
     } catch (err) {
-      alert("Could not access your camera/mic: " + err.message);
+      setError("Could not access camera/mic: " + err.message);
     }
   }
-  function stopRecordingBtn() {
+
+  function stopRecording() {
     if (mediaRecorder) mediaRecorder.stop();
+  }
+
+  function openForm(existing) {
+    setShowForm(true);
+    setEditId(existing ? existing.id : null);
+    setNote(existing ? existing.note : "");
+    setFile(null);
+    setPreviewUrl(existing && existing.mediaUrl ? existing.mediaUrl : null);
+    stopMediaTracks();
+  }
+
+  function closeForm() {
+    setShowForm(false);
+    setNote("");
+    setFile(null);
+    setPreviewUrl(null);
+    setEditId(null);
+    stopMediaTracks();
+    setError("");
+  }
+
+  function handleFile(e) {
+    if (e.target.files[0]) setFile(e.target.files[0]);
   }
 
   async function handleSubmit(e) {
     e.preventDefault();
-    if (!form.title || !form.file) return;
+    setError("");
     setUploading(true);
+    let mediaUrl = previewUrl;
     try {
-      // Upload video to storage
-      const ext = form.file.name.split(".").pop() || "webm";
-      const filename = `${user.uid}_${Date.now()}.${ext}`;
-      const storageRef = ref(storage, `videos/${user.uid}/${filename}`);
-      const uploadTask = uploadBytesResumable(storageRef, form.file);
-      await new Promise((res, rej) => uploadTask.on("state_changed", null, rej, res));
-      const mediaUrl = await getDownloadURL(uploadTask.snapshot.ref);
-
-      // Save metadata in Firestore
-      await addDoc(collection(db, "videos"), {
+      if (file) {
+        const filename = `${user.uid}_${Date.now()}.webm`;
+        const storageRef = ref(storage, `videos/${user.uid}/${filename}`);
+        const uploadTask = uploadBytesResumable(storageRef, file);
+        await new Promise((res, rej) => uploadTask.on("state_changed", null, rej, res));
+        mediaUrl = await getDownloadURL(uploadTask.snapshot.ref);
+      }
+      const payload = {
         uid: user.uid,
-        title: form.title,
-        description: form.description,
+        note,
         mediaUrl,
-        created: serverTimestamp()
-      });
+        created: editId ? undefined : serverTimestamp(),
+        updated: serverTimestamp(),
+      };
+      if (editId) {
+        await updateDoc(doc(db, "videos", editId), payload);
+      } else {
+        await addDoc(collection(db, "videos"), payload);
+      }
       closeForm();
     } catch (e) {
-      alert("Failed to save: " + e.message);
+      setError("Failed to save: " + e.message);
     }
     setUploading(false);
   }
@@ -150,7 +147,6 @@ export default function Videos({ user }) {
   async function handleDelete(id, mediaUrl) {
     if (!window.confirm("Delete this video?")) return;
     try {
-      // Remove from storage if present
       if (mediaUrl) {
         const segments = mediaUrl.split("/");
         const name = decodeURIComponent(segments[segments.length - 1].split("?")[0]);
@@ -162,107 +158,85 @@ export default function Videos({ user }) {
     }
   }
 
-  return (
-    <div className="card" style={{ maxWidth: 680, margin: "40px auto" }}>
-      <h2>Videos</h2>
-      <p style={{ color: "#7a6888", maxWidth: 600 }}>
-        Record or upload special video messages, stories, memories, or instructions.
-        These will be saved for your trusted contacts and loved ones.
-      </p>
-      <button className="btn-main" style={{ margin: "16px 0" }} onClick={openForm}>+ New Video</button>
-      {showForm && (
-        <form className="pol-form" onSubmit={handleSubmit} style={{ marginBottom: 24 }}>
-          <input
-            name="title"
-            type="text"
-            className="input"
-            placeholder="Video Title"
-            value={form.title}
-            onChange={handleChange}
-            required
-          />
+  // Sync live stream to video element
+  useEffect(() => {
+    if (videoRef.current && recording && mediaStream) {
+      videoRef.current.srcObject = mediaStream;
+    }
+    return () => {
+      if (videoRef.current) videoRef.current.srcObject = null;
+    };
+  }, [recording, mediaStream]);
+
+  // UI FORM
+  function renderForm() {
+    return (
+      <div className="pol-modal-bg">
+        <form className="pol-form" onSubmit={handleSubmit}>
+          <h3>{editId ? "Edit Video" : "Record / Upload Video"}</h3>
           <textarea
-            name="description"
-            className="input"
-            placeholder="Description or story (optional)"
-            value={form.description}
-            onChange={handleChange}
+            placeholder="Add a note for this video (optional)..."
             rows={2}
+            className="input"
+            value={note}
+            onChange={e => setNote(e.target.value)}
           />
-
-          {!form.file && !recording && (
-            <div style={{ marginBottom: 10 }}>
-              <button className="btn-main" type="button" onClick={startRecording} style={{ marginRight: 10 }}>
-                🎥 Record from Camera
-              </button>
-              <input
-                type="file"
-                ref={fileInput}
-                onChange={handleFile}
-                accept="video/*"
-                style={{ display: "inline", marginLeft: 8 }}
-              />
-            </div>
+          {!file && !recording && (
+            <>
+              <button type="button" className="btn-main" style={{ marginBottom: 12 }} onClick={startRecording}>🎥 Record from Camera</button>
+              <input type="file" accept="video/*" onChange={handleFile} style={{ marginBottom: 12 }} />
+            </>
           )}
-
           {recording && mediaStream && (
-            <div style={{ marginBottom: 10 }}>
-              <video
-                ref={videoRef}
-                autoPlay
-                muted
-                style={{ width: "100%", maxWidth: 300, borderRadius: 10, marginBottom: 8, background: "#eaeaf2" }}
-                playsInline
-              />
+            <div style={{ marginBottom: 13 }}>
+              <video ref={videoRef} autoPlay muted style={{ width: 220, borderRadius: 9, marginBottom: 5 }} playsInline />
               <div>
-                <span style={{ color: "#b11a25", fontWeight: 600 }}>● Recording...</span>
-                <button className="btn-main" type="button" onClick={stopRecordingBtn} style={{ marginLeft: 13 }}>
-                  Stop
-                </button>
+                <span style={{ color: "#b11a25", fontWeight: 500 }}>● Recording...</span>
+                <button type="button" className="btn-main" style={{ marginLeft: 13 }} onClick={stopRecording}>Stop</button>
               </div>
             </div>
           )}
-
-          {previewUrl && !recording && (
-            <video src={previewUrl} controls style={{ width: "100%", maxWidth: 350, borderRadius: 12, marginBottom: 9 }} />
+          {file && !recording && (
+            <video src={previewUrl} controls style={{ width: 220, borderRadius: 9, marginBottom: 7 }} />
           )}
-
-          <div style={{ display: "flex", gap: 12 }}>
-            <button className="btn-main" type="submit" disabled={uploading}>Save</button>
-            <button className="btn-cancel" type="button" onClick={closeForm}>Cancel</button>
+          <div style={{ display: "flex", gap: 9, marginTop: 8 }}>
+            <button className="btn-main" type="submit" disabled={uploading}>{editId ? "Update" : "Save"}</button>
+            <button type="button" className="btn-cancel" onClick={closeForm}>Cancel</button>
           </div>
+          {error && <div style={{ color: "#980000", marginTop: 11 }}>{error}</div>}
         </form>
-      )}
-      <hr style={{ margin: "24px 0" }} />
-      <div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="card" style={{ maxWidth: 700, margin: "40px auto" }}>
+      <h2>Videos</h2>
+      <div style={{ color: "#7a6888", maxWidth: 600, marginBottom: 15 }}>
+        Record or upload personal videos to be kept safe for your loved ones.
+      </div>
+      <button className="btn-main" style={{ marginBottom: 24 }} onClick={() => openForm()}>+ New Video</button>
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))", gap: 26 }}>
         {videos.length === 0 ? (
-          <div style={{ color: "#8cade1", marginTop: 16 }}>No videos saved yet.</div>
+          <div style={{ color: "#a697b8", padding: 25, textAlign: "center" }}>No videos yet.</div>
         ) : (
-          <div style={{
-            display: "grid",
-            gridTemplateColumns: "repeat(auto-fit, minmax(230px, 1fr))",
-            gap: "18px"
-          }}>
-            {videos.map((video) => (
-              <div key={video.id} className="card" style={{ padding: 16 }}>
-                <div style={{ fontWeight: 600, marginBottom: 5 }}>{video.title}</div>
-                <div style={{ color: "#8575a5", marginBottom: 7 }}>{video.description}</div>
-                {video.mediaUrl && (
-                  <video
-                    src={video.mediaUrl}
-                    controls
-                    style={{ width: "100%", maxWidth: 300, borderRadius: 11, background: "#f2eef5" }}
-                  />
-                )}
-                <div style={{ marginTop: 8, display: "flex", gap: 8 }}>
-                  <button className="btn-main" style={{ fontSize: "0.96em" }} onClick={() => window.open(video.mediaUrl, "_blank")}>Open</button>
-                  <button className="btn-danger" style={{ fontSize: "0.96em" }} onClick={() => handleDelete(video.id, video.mediaUrl)}>Delete</button>
-                </div>
+          videos.map(v => (
+            <div key={v.id} className="pol-card" style={{ display: "flex", flexDirection: "column", alignItems: "center", minHeight: 240 }}>
+              <video src={v.mediaUrl} controls style={{ width: "100%", maxWidth: 230, borderRadius: 11, marginBottom: 8 }} />
+              <div style={{ color: "#654e7a", fontWeight: 500, marginBottom: 6, textAlign: "center" }}>{v.note}</div>
+              <div style={{ fontSize: "13px", color: "#8cade1", marginBottom: 3 }}>
+                {v.created?.toDate ? v.created.toDate().toLocaleString() : ""}
               </div>
-            ))}
-          </div>
+              <div style={{ display: "flex", gap: 8 }}>
+                <button className="btn-main" style={{ fontSize: "0.96em", padding: "5px 13px" }} onClick={() => openForm(v)}>Edit</button>
+                <button className="btn-danger" style={{ fontSize: "0.96em", padding: "5px 13px" }} onClick={() => handleDelete(v.id, v.mediaUrl)}>Delete</button>
+              </div>
+            </div>
+          ))
         )}
       </div>
+      {showForm && renderForm()}
+      {/* Modal and button styling reuses your .btn-main, .pol-card etc. */}
     </div>
   );
 }
