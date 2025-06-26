@@ -20,8 +20,14 @@ export default function Videos({ user }) {
   const [previewUrl, setPreviewUrl] = useState(null);
   const [editId, setEditId] = useState(null);
   const [error, setError] = useState("");
-
   const videoRef = useRef();
+
+  // Modal: prevent body scroll when open
+  useEffect(() => {
+    if (showForm) document.body.style.overflow = "hidden";
+    else document.body.style.overflow = "";
+    return () => { document.body.style.overflow = ""; };
+  }, [showForm]);
 
   // Fetch videos from Firestore
   useEffect(() => {
@@ -44,7 +50,6 @@ export default function Videos({ user }) {
     return () => URL.revokeObjectURL(url);
   }, [file]);
 
-  // Cleanup media stream
   function stopMediaTracks() {
     if (mediaStream) {
       mediaStream.getTracks().forEach(track => track.stop());
@@ -158,7 +163,6 @@ export default function Videos({ user }) {
     }
   }
 
-  // Sync live stream to video element
   useEffect(() => {
     if (videoRef.current && recording && mediaStream) {
       videoRef.current.srcObject = mediaStream;
@@ -168,11 +172,19 @@ export default function Videos({ user }) {
     };
   }, [recording, mediaStream]);
 
-  // UI FORM
   function renderForm() {
     return (
-      <div className="pol-modal-bg">
-        <form className="card" style={{ maxWidth: 410 }} onSubmit={handleSubmit}>
+      <div className="modal-overlay" onClick={closeForm}>
+        <div
+          className="card"
+          style={{
+            maxWidth: 410,
+            width: "96vw",
+            zIndex: 2022,
+            position: "relative"
+          }}
+          onClick={e => e.stopPropagation()}
+        >
           <h3 style={{ marginBottom: 10 }}>{editId ? "Edit Video" : "Record / Upload Video"}</h3>
           <textarea
             placeholder="Add a note for this video (optional)..."
@@ -204,7 +216,19 @@ export default function Videos({ user }) {
             <button type="button" className="btn-cancel" onClick={closeForm}>Cancel</button>
           </div>
           {error && <div style={{ color: "#980000", marginTop: 11 }}>{error}</div>}
-        </form>
+        </div>
+        {/* Modal background style */}
+        <style>{`
+          .modal-overlay {
+            position: fixed;
+            left: 0; top: 0; right: 0; bottom: 0;
+            background: #24122785;
+            z-index: 2020;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+          }
+        `}</style>
       </div>
     );
   }
@@ -217,7 +241,6 @@ export default function Videos({ user }) {
       </div>
       <button className="btn-main" style={{ marginBottom: 24 }} onClick={() => openForm()}>+ New Video</button>
       
-      {/* Video Grid */}
       <div className="page-grid">
         {videos.length === 0 ? (
           <div style={{ color: "#a697b8", padding: 25, textAlign: "center" }}>No videos yet.</div>
