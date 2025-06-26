@@ -643,5 +643,153 @@ body, #root, .app-root, .content {
   flex-wrap: wrap;
 }
 
+/* --- Belongings Page --- */
+.belongings-root {
+  max-width: 1150px;
+  margin: 0 auto;
+  padding: 2.5rem 1.5rem 1.2rem 1.5rem;
+}
+.belongings-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 2.2rem;
+}
+.belongings-add-btn {
+  min-width: 160px;
+}
+
+.belongings-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 32px;
+  margin-bottom: 25px;
+}
+@media (min-width: 900px) {
+  .belongings-grid {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 32px;
+  }
+}
+.belongings-col {
+  min-width: 0;
+}
+.belongings-section-title {
+  font-weight: 600;
+  font-size: 1.19rem;
+  color: #645155;
+  border-bottom: 2px solid #ece3f3;
+  padding-bottom: 8px;
+  margin-bottom: 14px;
+  letter-spacing: 1px;
+}
+.belongings-empty {
+  color: #999;
+  font-size: 1.07rem;
+  margin-bottom: 12px;
+  padding-left: 4px;
+}
+
+.belongings-card {
+  background: #fff;
+  border-radius: 14px;
+  box-shadow: 0 1px 7px 0 #0001;
+  margin-bottom: 16px;
+  padding: 18px 17px 14px 17px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  position: relative;
+  border: 1.3px solid #ece1ec;
+  transition: box-shadow 0.14s, transform 0.13s;
+}
+.belongings-card:hover {
+  box-shadow: 0 7px 22px 0 #c189b336;
+  transform: translateY(-2px) scale(1.012);
+  border: 1.4px solid #dab0f1;
+}
+.belongings-card-img {
+  width: 72px;
+  height: 72px;
+  object-fit: cover;
+  border-radius: 8px;
+  margin-bottom: 10px;
+  box-shadow: 0 1px 7px 0 #22091a14;
+}
+.belongings-card-desc {
+  font-weight: 600;
+  color: #2a0516;
+  margin-bottom: 5px;
+  font-size: 1.05rem;
+  text-align: center;
+}
+.belongings-card-message {
+  color: #645155;
+  font-size: 0.98rem;
+  margin-bottom: 7px;
+  text-align: center;
+}
+.belongings-card-edit {
+  width: 90%;
+  margin-top: 7px;
+}
+
+/* --- Modal --- */
+.belongings-modal-bg {
+  position: fixed;
+  z-index: 2000;
+  inset: 0;
+  background: rgba(34,15,30,0.29);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.belongings-modal-card {
+  background: #fff;
+  border-radius: 17px;
+  min-width: 310px;
+  max-width: 410px;
+  width: 98vw;
+  box-shadow: 0 8px 40px 0 #0003;
+  padding: 32px 24px 28px 24px;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 13px;
+}
+.belongings-modal-title {
+  font-weight: 700;
+  font-size: 1.22rem;
+  color: #2a0516;
+  margin-bottom: 0.7rem;
+}
+.belongings-modal-thumb {
+  width: 60px;
+  height: 60px;
+  object-fit: cover;
+  border-radius: 7px;
+  margin-top: 8px;
+}
+.belongings-modal-actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 15px;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+}
+.belongings-input {
+  border: 1.5px solid #bfa4c4;
+  border-radius: 9px;
+  padding: 9px 11px;
+  font-size: 1em;
+  background: #fcfafd;
+  margin-bottom: 0;
+  width: 100%;
+  transition: border 0.15s;
+}
+.belongings-input:focus {
+  border-color: #8cade1;
+  outline: none;
+}
 
 
