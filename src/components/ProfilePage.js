@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 
 export default function ProfilePage({ user, onUpdate, onLogout }) {
   const [edit, setEdit] = useState(false);
@@ -11,6 +11,18 @@ export default function ProfilePage({ user, onUpdate, onLogout }) {
   });
   const [saving, setSaving] = useState(false);
 
+  // Always update form if user prop changes!
+  useEffect(() => {
+    setProfile({
+      username: user.username,
+      name: user.name || "",
+      phone: user.phone || "",
+      address: user.address || "",
+      email: user.email || "",
+    });
+    setEdit(false); // Reset edit mode after user is refreshed
+  }, [user]);
+
   function handleChange(e) {
     setProfile({ ...profile, [e.target.name]: e.target.value });
   }
@@ -19,14 +31,19 @@ export default function ProfilePage({ user, onUpdate, onLogout }) {
     e.preventDefault();
     setSaving(true);
     try {
-      // Call parent handler to update in DB (e.g., Firebase or your API)
       await onUpdate(profile);
-      setEdit(false);
+      // No need to setEdit(false) here, it's done in useEffect when user is updated
     } catch (e) {
       alert("Failed to update profile: " + e.message);
     }
     setSaving(false);
   }
+
+  return (
+    // ... (rest of your form unchanged)
+  );
+}
+
 
   return (
     <div className="profile-page-wrapper">
