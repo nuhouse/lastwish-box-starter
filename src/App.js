@@ -1,6 +1,5 @@
 // App.js
 
-import { doc, setDoc, getDoc, updateDoc } from "firebase/firestore";
 import React, { useState, useEffect } from "react";
 import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
 import Sidebar from "./components/Sidebar";
@@ -28,9 +27,7 @@ import './App.css';
 // --- Firebase imports ---
 // Adjust the path to your firebase config if needed!
 import { db } from "./firebase"; 
-import { doc, updateDoc, getDoc } from "firebase/firestore";
-
-// ------------------------------------------
+import { doc, setDoc, updateDoc, getDoc } from "firebase/firestore";
 
 function App() {
   const [user, setUser] = useState(null);
@@ -55,47 +52,41 @@ function App() {
     try {
       // Save to Firestore: user.uid required!
       const userRef = doc(db, "users", user.uid);
-      
 
-async function handleProfileUpdate(newProfile) {
-  try {
-    const userRef = doc(db, "users", user.uid);
+      // Check if doc exists
+      const docSnap = await getDoc(userRef);
+      if (!docSnap.exists()) {
+        // If not, create it with all profile fields!
+        await setDoc(userRef, {
+          username: user.username,
+          name: newProfile.name,
+          phone: newProfile.phone,
+          address: newProfile.address,
+          email: newProfile.email
+        });
+      } else {
+        // If yes, just update the changed fields
+        await updateDoc(userRef, {
+          name: newProfile.name,
+          phone: newProfile.phone,
+          address: newProfile.address,
+          email: newProfile.email
+        });
+      }
 
-    // Check if doc exists
-    const docSnap = await getDoc(userRef);
-    if (!docSnap.exists()) {
-      // If not, create it with all profile fields!
-      await setDoc(userRef, {
-        username: user.username,
-        name: newProfile.name,
-        phone: newProfile.phone,
-        address: newProfile.address,
-        email: newProfile.email
-      });
-    } else {
-      // If yes, just update the changed fields
-      await updateDoc(userRef, {
-        name: newProfile.name,
-        phone: newProfile.phone,
-        address: newProfile.address,
-        email: newProfile.email
-      });
+      // Fetch and set the updated profile
+      const freshUserSnap = await getDoc(userRef);
+      if (freshUserSnap.exists()) {
+        setUser({
+          ...freshUserSnap.data(),
+          uid: user.uid
+        });
+      }
+    } catch (e) {
+      alert("Failed to update profile: " + e.message);
+      throw e;
     }
-
-    // Fetch and set the updated profile
-    const freshUserSnap = await getDoc(userRef);
-    if (freshUserSnap.exists()) {
-      setUser({
-        ...freshUserSnap.data(),
-        uid: user.uid
-      });
-    }
-  } catch (e) {
-    alert("Failed to update profile: " + e.message);
-    throw e;
   }
-}
-
 
   // ---- Logout and Password Reset ----
   function handleLogout() {
