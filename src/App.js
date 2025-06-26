@@ -18,6 +18,7 @@ import LegacyMessage from "./components/LegacyMessage";
 import AdminDashboard from "./components/AdminDashboard";
 import DigitalPlatforms from "./components/DigitalPlatforms";
 import LastGoodbyes from "./components/LastGoodbyes";
+import Videos from "./components/Videos";
 import './App.css';
 
 
@@ -63,7 +64,7 @@ function App() {
   {/* Messages */}
   <Route path="/messages/personal-messages" element={<PersonalMessages user={user} />} />
   <Route path="/messages/last-goodbyes" element={<LastGoodbyes user={user} />} />
-  <Route path="/messages/videos" element={<Placeholder title="Videos" />} />
+  <Route path="/messages/videos" element={<Videos user={user} />} />
   <Route path="/messages/legacy-message" element={<LegacyMessage user={user} />} />
   {/* Legal */}
   <Route path="/legal/important-documents" element={<ImportantDocuments user={user} />} />
