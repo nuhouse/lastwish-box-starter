@@ -1,7 +1,9 @@
+/* --- Universal box sizing --- */
 *, *::before, *::after {
   box-sizing: border-box;
 }
 
+/* --- Body and root --- */
 body {
   margin: 0;
   font-family: 'Segoe UI', Arial, sans-serif;
@@ -10,6 +12,8 @@ body {
 #root {
   min-height: 100vh;
 }
+
+/* --- Header styles --- */
 .app-header {
   display: flex;
   align-items: center;
@@ -37,6 +41,7 @@ body {
   letter-spacing: 1px;
 }
 
+/* --- Hamburger menu (hidden on desktop, shown on mobile) --- */
 .hamburger-menu {
   background: none;
   border: none;
@@ -57,51 +62,140 @@ body {
   border-radius: 3px;
   transition: 0.19s;
 }
+
 .hamburger-menu:focus {
   outline: 2px solid #f15822;
 }
-.bar {
-  display: block;
-  width: 26px;
-  height: 3px;
-  background: #fff;
-  border-radius: 2px;
-  transition: 0.18s;
+
+@media (max-width: 900px) {
+  .hamburger-menu {
+    display: flex;
+  }
 }
 
-.sidebar {
-  background: #645155;
-  min-width: 200px;
-  width: 200px;
-  color: white;
+/* --- Sidebar styles --- */
+.sidebar-root {
+  width: 238px;
+  background: #2a0516;
+  color: #fff;
+  padding-top: 18px;
   min-height: 100vh;
-  padding-top: 2rem;
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: 1100;
+  box-shadow: 2px 0 14px 0 #22091a16;
+  transition: left 0.28s;
+  display: flex;
+  flex-direction: column;
 }
-.menu-link {
-  display: block;
-  padding: 1rem;
-  color: inherit;
-  text-decoration: none;
-  border: none;
-  background: none;
-  text-align: left;
-  width: 100%;
-  font-size: 1.05rem;
+.sidebar-brand {
+  font-weight: bold;
+  font-size: 24px;
+  letter-spacing: 1.2px;
+  margin-bottom: 15px;
+  text-align: center;
+  color: #fff;
+}
+
+/* Sidebar nav */
+.sidebar-list {
+  list-style: none;
+  padding: 0 0 30px 0;
+  margin: 0;
+}
+.sidebar-list li {
+  margin-bottom: 2px;
+}
+.sidebar-parent,
+.sidebar-single {
+  display: flex;
+  align-items: center;
+  padding: 13px 20px 13px 22px;
   cursor: pointer;
-  transition: background 0.2s;
+  font-size: 1.05rem;
+  border-radius: 9px;
+  transition: background 0.14s;
+  user-select: none;
+  text-decoration: none;
+  color: #fff;
 }
-.menu-link.active, .menu-link:hover {
-  background: #8cade1;
-  color: #2a0516;
+.sidebar-parent.open,
+.sidebar-single.active,
+.sidebar-parent.active {
+  background: #645155;
+  color: #fff;
+}
+.sidebar-parent span:last-child {
+  margin-left: auto;
+}
+.sidebar-children {
+  padding-left: 16px;
+  margin-top: 1px;
+}
+.sidebar-children li a {
+  display: block;
+  padding: 8px 15px;
+  color: #f8e5fc;
+  border-radius: 6px;
+  text-decoration: none;
+  font-size: 0.98rem;
+  transition: background 0.14s;
+}
+.sidebar-children li a.active,
+.sidebar-children li a:hover {
+  background: #e97c13;
+  color: #fff;
+}
+
+/* --- Responsive sidebar (slide in/out) --- */
+@media (max-width: 900px) {
+  .sidebar-root {
+    left: -260px;
+    box-shadow: none;
+    transition: left 0.28s;
+  }
+  .sidebar-root.sidebar-open {
+    left: 0;
+    box-shadow: 6px 0 28px 0 #2a05164c;
+    z-index: 1100;
+  }
+  .sidebar-overlay {
+    display: block;
+  }
+  .content {
+    margin-left: 0 !important;
+  }
+}
+
+/* --- Overlay for sidebar --- */
+.sidebar-overlay {
+  display: none;
+}
+
+/* --- Main content area --- */
+.app-root {
+  display: flex;
+  min-height: 100vh;
 }
 .content {
   flex: 1;
   padding: 1rem;
   background: #fff;
   min-height: 100vh;
+  margin-left: 238px;
+  transition: margin-left 0.23s;
+  display: flex;
+  flex-direction: column;
 }
 
-/* ----------- Responsive header ----------- */
+@media (max-width: 900px) {
+  .content {
+    margin-left: 0 !important;
+  }
+}
+
+/* ----------- Responsive header tweaks ----------- */
 @media (max-width: 700px) {
   .app-header {
     padding: 0.6rem 0.8rem;
@@ -118,11 +212,7 @@ body {
   }
 }
 
-/* ---------- End header section ---------- */
-
-
-/* main.css: Master styles for LastWish Box */
-
+/* --- Modern Button Styles --- */
 :root {
   --brand-main: #2a0516;
   --brand-dark: #645155;
@@ -132,7 +222,6 @@ body {
   --brand-muted: #657899;
 }
 
-/* Modern Button Styles */
 .btn-main {
   background: linear-gradient(90deg, var(--brand-main) 70%, var(--brand-accent) 120%);
   color: #fff;
@@ -145,17 +234,14 @@ body {
   transition: background 0.15s, box-shadow 0.15s;
   box-shadow: 0 2px 10px var(--brand-main)19;
 }
-
 .btn-main:disabled, .btn-main[aria-disabled="true"] {
   background: #ccc;
   color: #fff;
   cursor: not-allowed;
 }
-
 .btn-main:hover:not(:disabled) {
   background: linear-gradient(90deg, var(--brand-accent) 40%, var(--brand-danger) 100%);
 }
-
 .btn-danger {
   background: var(--brand-danger);
   color: #fff;
@@ -167,11 +253,9 @@ body {
   cursor: pointer;
   transition: background 0.15s;
 }
-
 .btn-danger:hover {
   background: var(--brand-accent);
 }
-
 .btn-cancel {
   background: var(--brand-muted);
   color: #fff;
@@ -183,13 +267,12 @@ body {
   cursor: pointer;
   transition: background 0.12s;
 }
-
 .btn-cancel:hover {
   background: #b4c9f1;
   color: var(--brand-main);
 }
 
-/* Card & modal for all pages */
+/* --- Card & modal --- */
 .card {
   background: #fff;
   border-radius: 18px;
@@ -200,14 +283,13 @@ body {
   transition: box-shadow 0.13s, border 0.13s, transform 0.13s;
   position: relative;
 }
-
 .card:hover {
   box-shadow: 0 8px 30px 0 #c189b336;
   transform: translateY(-2px) scale(1.013);
   border: 1.5px solid #dab0f1;
 }
 
-/* Modern form inputs */
+/* --- Modern form inputs --- */
 input[type="text"],
 input[type="email"],
 input[type="password"],
@@ -233,7 +315,7 @@ select {
   font-size: 1.07em;
 }
 
-/* Responsive grid for cards/sections */
+/* --- Responsive grid for cards/sections --- */
 .page-grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
@@ -250,44 +332,12 @@ select {
     gap: 14px;
   }
 }
-/* Show hamburger on mobile */
-@media (max-width: 900px) {
-  .hamburger-menu {
-    display: flex;
-  }
+
+/* --- Utility --- */
+a {
+  color: inherit;
+  text-decoration: none;
 }
-
-/* Hide sidebar on mobile unless open */
-@media (max-width: 900px) {
-  .sidebar-root {
-    left: -260px;
-    transition: left 0.28s;
-  }
-  .sidebar-root.sidebar-open {
-    left: 0;
-    box-shadow: 6px 0 28px 0 #2a05164c;
-    z-index: 1100;
-  }
-  .sidebar-overlay {
-    display: block;
-  }
-  .content {
-    margin-left: 0 !important;
-  }
-
-/* Sidebar base (desktop) */
-.sidebar-root {
-  width: 238px;
-  background: #2a0516;
-  color: #fff;
-  padding-top: 18px;
-  min-height: 100vh;
-  position: fixed;
-  top: 0;
-  left: 0;
-  z-index: 1100;
-  box-shadow: 2px 0 14px 0 #22091a16;
-  transition: left 0.26s;
-  display: flex;
-  flex-direction: column;
-}}
+a:visited {
+  color: inherit;
+}
