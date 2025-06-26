@@ -41,13 +41,12 @@ function App() {
   }
 
   function handleProfileUpdate(newProfile) {
-  // TODO: Update user profile in your backend/database here.
-  // For now, let's update the local user state so it reflects changes.
   setUser(prev => ({
     ...prev,
-    ...newProfile
+    ...newProfile,
+    username: prev.username // Don't allow username change!
   }));
-  alert("Profile updated!\n" + JSON.stringify(newProfile, null, 2));
+  // Optionally, add your DB update logic here!
 }
 
 
@@ -167,7 +166,7 @@ function App() {
     user={user}
     onUpdate={handleProfileUpdate}
     onLogout={handleLogout}
-    onPasswordReset={handlePasswordReset}
+    // ...other props
   />
 } />
             {/* Admin Dashboard (optional) */}
