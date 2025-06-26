@@ -172,8 +172,8 @@ export default function Videos({ user }) {
   function renderForm() {
     return (
       <div className="pol-modal-bg">
-        <form className="pol-form" onSubmit={handleSubmit}>
-          <h3>{editId ? "Edit Video" : "Record / Upload Video"}</h3>
+        <form className="card" style={{ maxWidth: 410 }} onSubmit={handleSubmit}>
+          <h3 style={{ marginBottom: 10 }}>{editId ? "Edit Video" : "Record / Upload Video"}</h3>
           <textarea
             placeholder="Add a note for this video (optional)..."
             rows={2}
@@ -210,18 +210,20 @@ export default function Videos({ user }) {
   }
 
   return (
-    <div className="card" style={{ maxWidth: 700, margin: "40px auto" }}>
+    <div className="card" style={{ maxWidth: 1100, margin: "40px auto" }}>
       <h2>Videos</h2>
       <div style={{ color: "#7a6888", maxWidth: 600, marginBottom: 15 }}>
         Record or upload personal videos to be kept safe for your loved ones.
       </div>
       <button className="btn-main" style={{ marginBottom: 24 }} onClick={() => openForm()}>+ New Video</button>
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))", gap: 26 }}>
+      
+      {/* Video Grid */}
+      <div className="page-grid">
         {videos.length === 0 ? (
           <div style={{ color: "#a697b8", padding: 25, textAlign: "center" }}>No videos yet.</div>
         ) : (
           videos.map(v => (
-            <div key={v.id} className="pol-card" style={{ display: "flex", flexDirection: "column", alignItems: "center", minHeight: 240 }}>
+            <div key={v.id} className="card" style={{ display: "flex", flexDirection: "column", alignItems: "center", minHeight: 240 }}>
               <video src={v.mediaUrl} controls style={{ width: "100%", maxWidth: 230, borderRadius: 11, marginBottom: 8 }} />
               <div style={{ color: "#654e7a", fontWeight: 500, marginBottom: 6, textAlign: "center" }}>{v.note}</div>
               <div style={{ fontSize: "13px", color: "#8cade1", marginBottom: 3 }}>
@@ -236,7 +238,6 @@ export default function Videos({ user }) {
         )}
       </div>
       {showForm && renderForm()}
-      {/* Modal and button styling reuses your .btn-main, .pol-card etc. */}
     </div>
   );
 }
