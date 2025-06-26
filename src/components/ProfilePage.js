@@ -11,17 +11,18 @@ export default function ProfilePage({ user, onUpdate, onLogout }) {
   });
   const [saving, setSaving] = useState(false);
 
-  // Update form when user prop changes
+  // Fix: Only reset form if not in edit mode
   useEffect(() => {
-    setProfile({
-      username: user.username,
-      name: user.name || "",
-      phone: user.phone || "",
-      address: user.address || "",
-      email: user.email || "",
-    });
-    // REMOVE setEdit(false); from here!
-  }, [user]);
+    if (!edit) {
+      setProfile({
+        username: user.username,
+        name: user.name || "",
+        phone: user.phone || "",
+        address: user.address || "",
+        email: user.email || "",
+      });
+    }
+  }, [user, edit]);
 
   function handleChange(e) {
     setProfile({ ...profile, [e.target.name]: e.target.value });
@@ -32,7 +33,7 @@ export default function ProfilePage({ user, onUpdate, onLogout }) {
     setSaving(true);
     try {
       await onUpdate(profile);
-      setEdit(false); // Set edit to false only after successful save
+      setEdit(false);
     } catch (e) {
       alert("Failed to update profile: " + e.message);
     }
