@@ -58,19 +58,17 @@ const menu = [
 
 export default function Sidebar({ open = false, onClose }) {
   const location = useLocation();
-  const [openMenus, setOpenMenus] = useState({});
+  const [openMenu, setOpenMenu] = useState(null);
 
   // Accordion toggle for parent menus
   function toggleMenu(index) {
-    setOpenMenus(prev => ({ ...prev, [index]: !prev[index] }));
+    setOpenMenu(prev => (prev === index ? null : index));
   }
 
-  // Helper to check if any child is active for highlighting parent
   function isChildActive(children) {
     return children.some(child => location.pathname === child.path);
   }
 
-  // Optionally close sidebar when a link is clicked (on mobile)
   function handleLinkClick() {
     if (onClose) onClose();
   }
@@ -89,7 +87,7 @@ export default function Sidebar({ open = false, onClose }) {
                   <div
                     className={
                       "sidebar-parent" +
-                      (openMenus[i] ? " open" : "") +
+                      (openMenu === i ? " open" : "") +
                       (isChildActive(item.children) ? " active" : "")
                     }
                     onClick={() => toggleMenu(i)}
@@ -101,13 +99,13 @@ export default function Sidebar({ open = false, onClose }) {
                         marginLeft: "auto",
                         fontSize: 18,
                         transition: "transform 0.2s",
-                        transform: openMenus[i] ? "rotate(90deg)" : "rotate(0)"
+                        transform: openMenu === i ? "rotate(90deg)" : "rotate(0)"
                       }}
                     >▶</span>
                   </div>
                   <ul
                     className="sidebar-children"
-                    style={{ display: openMenus[i] || isChildActive(item.children) ? "block" : "none" }}
+                    style={{ display: openMenu === i || isChildActive(item.children) ? "block" : "none" }}
                   >
                     {item.children.map(child => (
                       <li key={child.label}>
