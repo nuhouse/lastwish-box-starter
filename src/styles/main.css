@@ -274,7 +274,7 @@ select {
   .content {
     margin-left: 0 !important;
   }
-}
+
 /* Sidebar base (desktop) */
 .sidebar-root {
   width: 238px;
@@ -290,4 +290,4 @@ select {
   transition: left 0.26s;
   display: flex;
   flex-direction: column;
-}
+}}
