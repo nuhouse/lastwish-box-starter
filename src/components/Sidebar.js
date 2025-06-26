@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
+import { getAuth, sendPasswordResetEmail } from "firebase/auth";
 
 const menu = [
   { label: "Home", path: "/", icon: "🏠" },
@@ -43,6 +44,7 @@ export default function Sidebar({ open = false, onClose, user }) {
   const [showPwModal, setShowPwModal] = useState(false);
   const [pwLoading, setPwLoading] = useState(false);
   const [pwSent, setPwSent] = useState(false);
+  const [pwError, setPwError] = useState("");
 
   // Accordion: only one parent at a time
   function toggleMenu(index) {
@@ -61,9 +63,9 @@ export default function Sidebar({ open = false, onClose, user }) {
     if (onClose) onClose();
   }
 
-  const userInitial = user?.username
-    ? user.username[0].toUpperCase()
-    : "U";
+  const userEmail = user?.username || user?.email || ""; // use username as email
+
+  const userInitial = userEmail ? userEmail[0].toUpperCase() : "U";
 
   function handleProfile() {
     navigate("/profile");
@@ -73,12 +75,14 @@ export default function Sidebar({ open = false, onClose, user }) {
   async function sendPwReset(e) {
     e.preventDefault();
     setPwLoading(true);
+    setPwError("");
+    setPwSent(false);
     try {
-      // Replace with your password reset function (e.g., Firebase sendPasswordResetEmail)
-      await new Promise(r => setTimeout(r, 1200)); // fake delay
+      const auth = getAuth();
+      await sendPasswordResetEmail(auth, userEmail);
       setPwSent(true);
     } catch (err) {
-      alert("Failed to send password reset link.");
+      setPwError(err.message || "Failed to send password reset link.");
     }
     setPwLoading(false);
   }
@@ -155,7 +159,7 @@ export default function Sidebar({ open = false, onClose, user }) {
           <div className="profile-avatar" onClick={handleProfile}>
             {userInitial}
           </div>
-          <div className="profile-username">{user?.username || "User"}</div>
+          <div className="profile-username">{userEmail}</div>
           <button
             className="btn-main profile-btn"
             style={{ marginTop: 12, marginBottom: 5, width: "90%" }}
@@ -187,19 +191,19 @@ export default function Sidebar({ open = false, onClose, user }) {
             {pwSent ? (
               <div>
                 <div style={{ color: "#2a0516", fontWeight: 500, margin: "22px 0 24px" }}>
-                  A password reset email has been sent to:<br /><span style={{ color: "#8cade1" }}>{user.username}</span>
+                  A password reset email has been sent to:<br /><span style={{ color: "#8cade1" }}>{userEmail}</span>
                 </div>
                 <button className="btn-main" style={{ width: 100 }} onClick={() => setShowPwModal(false)}>Close</button>
               </div>
             ) : (
               <form onSubmit={sendPwReset}>
-                <label style={{ fontWeight: 500, marginBottom: 5, display: "block" }}>Email</label>
-                <input
-                  type="email"
-                  value={user.username}
-                  disabled
-                  style={{ marginBottom: 15, width: "100%" }}
-                />
+                <div style={{ fontWeight: 500, marginBottom: 15 }}>
+                  We will send a password reset email to:<br />
+                  <span style={{ color: "#8cade1" }}>{userEmail}</span>
+                </div>
+                {pwError && (
+                  <div style={{ color: "#a00", marginBottom: 10 }}>{pwError}</div>
+                )}
                 <button className="btn-main" style={{ width: "100%" }} disabled={pwLoading}>
                   {pwLoading ? "Sending..." : "Send Reset Link"}
                 </button>
@@ -242,6 +246,7 @@ export default function Sidebar({ open = false, onClose, user }) {
           color: #fff;
           text-align: center;
           width: 100%;
+          word-break: break-all;
         }
         .profile-btn {
           font-size: 1em;
