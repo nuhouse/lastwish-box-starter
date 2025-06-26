@@ -59,9 +59,14 @@ function App() {
           open={sidebarOpen}
           onClose={() => setSidebarOpen(false)}
           user={user}
-          onLogout={handleLogout}
-          onPasswordReset={handlePasswordReset}
+        
         />
+
+            <Sidebar
+  open={sidebarOpen}
+  onClose={() => setSidebarOpen(false)}
+  user={user}
+/>
 
         {/* Overlay for mobile */}
         {sidebarOpen && (
