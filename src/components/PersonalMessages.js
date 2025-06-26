@@ -20,12 +20,13 @@ export default function PersonalMessages({ user }) {
   const [text, setText] = useState("");
   const [file, setFile] = useState(null);
   const [uploading, setUploading] = useState(false);
-  const [editingId, setEditingId] = useState(null); // <-- NEW
-  const [editingText, setEditingText] = useState(""); // <-- NEW
+  const [editingId, setEditingId] = useState(null);
+  const [editingText, setEditingText] = useState("");
   const fileInput = useRef();
 
   // Load messages
   useEffect(() => {
+    if (!user) return;
     const q = query(
       collection(db, "personalMessages"),
       where("uid", "==", user.uid),
@@ -35,7 +36,7 @@ export default function PersonalMessages({ user }) {
       setMessages(snap.docs.map(d => ({ id: d.id, ...d.data() })));
     });
     return unsub;
-  }, [user.uid]);
+  }, [user]);
 
   // Upload new message
   const handleUpload = async e => {
@@ -50,12 +51,7 @@ export default function PersonalMessages({ user }) {
         const storageRef = ref(storage, `personalMessages/${user.uid}/${fileName}`);
         const uploadTask = uploadBytesResumable(storageRef, file);
         await new Promise((resolve, reject) => {
-          uploadTask.on(
-            "state_changed",
-            null,
-            reject,
-            () => resolve()
-          );
+          uploadTask.on("state_changed", null, reject, resolve);
         });
         fileUrl = await getDownloadURL(uploadTask.snapshot.ref);
       }
@@ -69,7 +65,7 @@ export default function PersonalMessages({ user }) {
       });
       setText("");
       setFile(null);
-      fileInput.current.value = "";
+      if (fileInput.current) fileInput.current.value = "";
     } catch (e) {
       alert("Upload failed: " + e.message);
     }
@@ -82,7 +78,7 @@ export default function PersonalMessages({ user }) {
       if (msg.fileUrl && msg.fileName) {
         try {
           await deleteObject(ref(storage, `personalMessages/${user.uid}/${msg.fileName}`));
-        } catch (e) { /* Ignore if not found */ }
+        } catch (e) { /* Ignore */ }
       }
       await deleteDoc(doc(db, "personalMessages", msg.id));
     }
@@ -113,47 +109,34 @@ export default function PersonalMessages({ user }) {
 
   return (
     <div>
-    
       <h2>Personal Messages</h2>
-      <form onSubmit={handleUpload} style={{ marginBottom: 24, display: "flex", flexDirection: "column", gap: 12, maxWidth: 430 }}>
+      <form className="card" onSubmit={handleUpload} style={{ maxWidth: 430, marginBottom: 28 }}>
         <textarea
           value={text}
           required
           minLength={2}
           maxLength={2000}
+          className="input"
           placeholder="Write your message..."
           onChange={e => setText(e.target.value)}
-          style={{ minHeight: 64, resize: "vertical", padding: 10, borderRadius: 5, border: "1px solid #ccc" }}
+          rows={4}
+          style={{ resize: "vertical" }}
         />
         <input
           type="file"
           ref={fileInput}
           accept="image/*,video/*,.pdf,.doc,.docx,.xls,.xlsx,.txt"
           onChange={e => setFile(e.target.files[0])}
+          style={{ marginBottom: 10 }}
         />
-        <button type="submit" disabled={uploading} style={{
-          background: "#2a0516",
-          color: "#fff",
-          border: "none",
-          borderRadius: "5px",
-          padding: "10px 18px",
-          fontWeight: 600,
-          cursor: "pointer"
-        }}>
+        <button type="submit" disabled={uploading} className="btn-main" style={{ width: 160 }}>
           {uploading ? "Uploading..." : "Add Message"}
         </button>
       </form>
 
-      <div style={{ maxWidth: 630 }}>
+      <div style={{ maxWidth: 640 }}>
         {messages.map(msg => (
-          <div key={msg.id} style={{
-            border: "1px solid #eee",
-            borderRadius: 9,
-            marginBottom: 16,
-            padding: 14,
-            background: "#f8f8fa",
-            position: "relative"
-          }}>
+          <div className="card" key={msg.id} style={{ position: "relative", marginBottom: 20 }}>
             {editingId === msg.id ? (
               <div>
                 <textarea
@@ -162,23 +145,16 @@ export default function PersonalMessages({ user }) {
                   maxLength={2000}
                   required
                   autoFocus
+                  className="input"
+                  rows={4}
                   onChange={e => setEditingText(e.target.value)}
-                  style={{
-                    minHeight: 60, width: "100%", resize: "vertical", borderRadius: 5,
-                    padding: 8, border: "1px solid #aaa", marginBottom: 8
-                  }}
+                  style={{ resize: "vertical" }}
                 />
-                <div>
-                  <button onClick={() => handleSaveEdit(msg)} style={{
-                    background: "#2a0516", color: "#fff", border: "none", borderRadius: 4,
-                    padding: "7px 16px", marginRight: 8, fontWeight: 600, cursor: "pointer"
-                  }}>
+                <div style={{ marginTop: 8, display: "flex", gap: 9 }}>
+                  <button onClick={() => handleSaveEdit(msg)} type="button" className="btn-main">
                     Save
                   </button>
-                  <button onClick={handleCancelEdit} style={{
-                    background: "#ccc", color: "#222", border: "none", borderRadius: 4,
-                    padding: "7px 14px", fontWeight: 600, cursor: "pointer"
-                  }}>
+                  <button onClick={handleCancelEdit} type="button" className="btn-cancel">
                     Cancel
                   </button>
                 </div>
@@ -189,44 +165,39 @@ export default function PersonalMessages({ user }) {
                 {msg.fileUrl && (
                   msg.fileType === "image" ? (
                     <img
-  src={msg.fileUrl}
-  alt=""
-  style={{
-    width: 100,
-    height: 100,
-    objectFit: "cover",
-    borderRadius: 8,
-    marginBottom: 4,
-    border: "2px solid #eee",
-    boxShadow: "0 2px 6px rgba(0,0,0,0.06)",
-    transition: "transform 0.18s",
-    cursor: "pointer"
-  }}
-  onMouseOver={e => e.currentTarget.style.transform = "scale(1.08)"}
-  onMouseOut={e => e.currentTarget.style.transform = "scale(1)"}
-/>
-
+                      src={msg.fileUrl}
+                      alt=""
+                      style={{
+                        width: 100, height: 100, objectFit: "cover",
+                        borderRadius: 8, marginBottom: 4,
+                        border: "2px solid #eee", boxShadow: "0 2px 6px rgba(0,0,0,0.06)"
+                      }}
+                    />
                   ) : msg.fileType === "video" ? (
                     <video src={msg.fileUrl} controls style={{ maxWidth: "100%", borderRadius: 8, marginBottom: 4 }} />
                   ) : (
-                    <a href={msg.fileUrl} target="_blank" rel="noopener noreferrer" style={{ color: "#f15822", textDecoration: "underline" }}>
+                    <a href={msg.fileUrl} target="_blank" rel="noopener noreferrer" style={{ color: "var(--brand-accent)", textDecoration: "underline" }}>
                       Download File
                     </a>
                   )
                 )}
-                <div style={{ fontSize: "0.95em", color: "#657899", marginTop: 4 }}>
+                <div style={{ fontSize: "0.97em", color: "#657899", marginTop: 4 }}>
                   {msg.created && msg.created.toDate
                     ? msg.created.toDate().toLocaleString()
                     : ""}
                 </div>
-                <button onClick={() => handleEdit(msg)} style={{
-                  position: "absolute", top: 8, right: 65, background: "#e97c13", color: "#fff",
-                  border: "none", borderRadius: 4, padding: "2px 9px", fontSize: "0.93em", cursor: "pointer"
-                }}>Edit</button>
-                <button onClick={() => handleDelete(msg)} style={{
-                  position: "absolute", top: 8, right: 8, background: "#980000", color: "#fff",
-                  border: "none", borderRadius: 4, padding: "2px 9px", fontSize: "0.93em", cursor: "pointer"
-                }}>Delete</button>
+                <div style={{ position: "absolute", top: 14, right: 10, display: "flex", gap: 8 }}>
+                  <button
+                    onClick={() => handleEdit(msg)}
+                    className="btn-main"
+                    style={{ padding: "4px 14px", fontSize: "0.93em" }}
+                  >Edit</button>
+                  <button
+                    onClick={() => handleDelete(msg)}
+                    className="btn-danger"
+                    style={{ padding: "4px 14px", fontSize: "0.93em" }}
+                  >Delete</button>
+                </div>
               </>
             )}
           </div>
