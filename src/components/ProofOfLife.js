@@ -32,12 +32,12 @@ export default function ProofOfLife({ user }) {
   const [chunks, setChunks] = useState([]);
   const [recordType, setRecordType] = useState(null);
   const [preview, setPreview] = useState(null);
-  const [fileUrl, setFileUrl] = useState(null); // For recorded preview
+  const [fileUrl, setFileUrl] = useState(null);
 
   const fileInput = useRef();
   const videoRef = useRef();
 
-  // Fetch proofs from Firestore
+  // Fetch proofs
   useEffect(() => {
     if (!user) return;
     const q = query(
@@ -62,7 +62,7 @@ export default function ProofOfLife({ user }) {
     return () => URL.revokeObjectURL(url);
   }, [form.file]);
 
-  // Sync srcObject for live video preview (fixes crash!)
+  // Live video preview
   useEffect(() => {
     if (videoRef.current && recording && mediaStream && recordType === "video") {
       videoRef.current.srcObject = mediaStream;
@@ -225,7 +225,7 @@ export default function ProofOfLife({ user }) {
           <div className="pol-type">{proof.type}</div>
           <div className="pol-actions">
             <button className="btn-main" onClick={e => { e.stopPropagation(); openForm(proof); }}>Edit</button>
-            <button className="btn-delete" onClick={e => { e.stopPropagation(); handleDelete(proof.id, proof.mediaUrl); }}>Delete</button>
+            <button className="btn-danger" onClick={e => { e.stopPropagation(); handleDelete(proof.id, proof.mediaUrl); }}>Delete</button>
           </div>
         </div>
       </div>
@@ -257,7 +257,6 @@ export default function ProofOfLife({ user }) {
 
   function renderForm() {
     const supportsMedia = !!(navigator.mediaDevices && window.MediaRecorder);
-    // For concise preview logic
     const previewUrl = fileUrl || form.mediaUrl;
 
     return (
@@ -279,53 +278,25 @@ export default function ProofOfLife({ user }) {
             rows={3}
             style={{marginBottom:12}}
           />
-          {/* Record video/audio */}
+          {/* Recording UI */}
           {form.type === "video" && supportsMedia && !form.file && !recording && (
-            <button
-              type="button"
-              className="btn-main"
-              style={{ marginBottom: 7 }}
-              onClick={() => startRecording("video")}
-            >
-              🎥 Record Video
-            </button>
+            <button type="button" className="btn-main" style={{ marginBottom: 7 }} onClick={() => startRecording("video")}>🎥 Record Video</button>
           )}
           {form.type === "audio" && supportsMedia && !form.file && !recording && (
-            <button
-              type="button"
-              className="btn-main"
-              style={{ marginBottom: 7 }}
-              onClick={() => startRecording("audio")}
-            >
-              🎤 Record Audio
-            </button>
+            <button type="button" className="btn-main" style={{ marginBottom: 7 }} onClick={() => startRecording("audio")}>🎤 Record Audio</button>
           )}
-          {/* Show live video preview while recording */}
           {recording && mediaStream && recordType === "video" && (
-            <video
-              ref={videoRef}
-              autoPlay
-              muted
-              style={{ width: 200, marginBottom: 9, borderRadius: 10 }}
-              playsInline
-            />
+            <video ref={videoRef} autoPlay muted style={{ width: 200, marginBottom: 9, borderRadius: 10 }} playsInline />
           )}
           {recording && mediaStream && recordType === "audio" && (
             <div style={{ marginBottom: 9, color: "#8cade1", fontWeight: 500 }}>● Recording audio...</div>
           )}
-          {/* Stop recording button */}
           {recording && (
             <div style={{ marginBottom: 8 }}>
               <span style={{ color: "#b11a25", fontWeight: 500 }}>● Recording...</span>
-              <button
-                type="button"
-                className="btn-main"
-                style={{ background: "#b11a25", marginLeft: 13 }}
-                onClick={stopRecording}
-              >Stop</button>
+              <button type="button" className="btn-main" style={{ background: "#b11a25", marginLeft: 13 }} onClick={stopRecording}>Stop</button>
             </div>
           )}
-          {/* File upload if not recording */}
           {["photo", "video", "audio"].includes(form.type) && !recording && (
             <input
               type="file"
@@ -340,7 +311,6 @@ export default function ProofOfLife({ user }) {
               style={{ marginBottom: 9 }}
             />
           )}
-          {/* Modern preview with Play button for video/audio */}
           {!recording && form.type === "video" && previewUrl && (
             <div
               style={{
@@ -358,10 +328,7 @@ export default function ProofOfLife({ user }) {
             >
               <video
                 src={previewUrl}
-                style={{
-                  width: "100%", height: "100%", objectFit: "cover",
-                  pointerEvents: "none"
-                }}
+                style={{ width: "100%", height: "100%", objectFit: "cover", pointerEvents: "none" }}
                 preload="metadata"
                 tabIndex={-1}
               />
@@ -375,7 +342,6 @@ export default function ProofOfLife({ user }) {
               </div>
             </div>
           )}
-          {/* Audio preview with play button */}
           {!recording && form.type === "audio" && previewUrl && (
             <div style={{ display: "flex", alignItems: "center", marginBottom: 7, gap: 10 }}>
               <button
@@ -393,7 +359,6 @@ export default function ProofOfLife({ user }) {
               <span style={{ color: "#645155", fontSize: 14 }}>Audio ready</span>
             </div>
           )}
-          {/* Photo preview */}
           {!recording && form.type === "photo" && previewUrl && (
             <img src={previewUrl} alt="" style={{ width: 80, borderRadius: 10, marginBottom: 7, boxShadow: "0 2px 8px #0001" }} />
           )}
@@ -411,7 +376,7 @@ export default function ProofOfLife({ user }) {
   return (
     <div className="pol-root">
       <h2>Proof of Life</h2>
-      <div style={{ color: "#7a6888", maxWidth: 600, marginBottom: 15 }}>
+      <div className="pol-intro">
         Upload a text, photo, video, or audio entry—or record one live—to show you are safe and well. Only you and your trusted contacts can access these.
       </div>
       <button className="btn-main pol-add-btn" onClick={() => openForm()}>
@@ -419,154 +384,13 @@ export default function ProofOfLife({ user }) {
       </button>
       <div className="pol-grid">
         {proofs.length === 0 ? (
-          <div style={{ color: "#a697b8", padding: 25, textAlign: "center" }}>No proof entries yet.</div>
+          <div className="pol-empty">No proof entries yet.</div>
         ) : (
           proofs.map(proof => <ProofCard key={proof.id} proof={proof} />)
         )}
       </div>
       {showForm && renderForm()}
       {preview && <ProofPreview proof={preview} onClose={() => setPreview(null)} />}
-      <style>{`
-        .pol-root {
-          max-width: 700px;
-          margin: 0 auto;
-          padding: 32px 12px 48px 12px;
-        }
-        .pol-add-btn {
-          margin-bottom: 28px;
-          font-size: 1.12em;
-        }
-        .pol-grid {
-          display: grid;
-          grid-template-columns: repeat(auto-fit, minmax(270px, 1fr));
-          gap: 26px;
-        }
-        .pol-card {
-          background: #fff;
-          border-radius: 18px;
-          box-shadow: 0 4px 22px 0 #2a051613;
-          padding: 19px 18px 17px 15px;
-          cursor: pointer;
-          border: 1.5px solid #ece1ec;
-          min-height: 118px;
-          transition: box-shadow 0.13s, border 0.13s, transform 0.13s;
-          position: relative;
-          display: flex;
-          align-items: flex-start;
-          gap: 12px;
-        }
-        .pol-card:hover {
-          box-shadow: 0 8px 30px 0 #c189b336;
-          transform: translateY(-2px) scale(1.013);
-          border: 1.5px solid #dab0f1;
-        }
-        .pol-icon {
-          font-size: 2.05em;
-          margin-top: 4px;
-        }
-        .pol-info {
-          flex: 1; min-width: 0;
-        }
-        .pol-date {
-          font-size: 15px;
-          color: #927ba1;
-          margin-bottom: 4px;
-        }
-        .pol-note {
-          font-size: 16px;
-          color: #654e7a;
-          margin-bottom: 7px;
-          font-weight: 500;
-        }
-        .pol-type {
-          font-size: 13px;
-          color: #8cade1;
-          margin-bottom: 3px;
-          text-transform: capitalize;
-        }
-        .pol-actions {
-          margin-top: 11px;
-          display: flex;
-          gap: 8px;
-        }
-        .btn-main {
-          background: linear-gradient(90deg, #2a0516 70%, #f15822 120%);
-          color: #fff;
-          border: none;
-          border-radius: 11px;
-          font-size: 1em;
-          font-weight: 600;
-          padding: 7px 22px;
-          cursor: pointer;
-          transition: background 0.15s, box-shadow 0.15s;
-          box-shadow: 0 2px 10px #2a051629;
-        }
-        .btn-main:disabled, .btn-main[aria-disabled="true"] {
-          background: #ccc;
-          color: #fff;
-          cursor: not-allowed;
-        }
-        .btn-main:hover:not(:disabled) {
-          background: linear-gradient(90deg, #f15822 40%, #980000 100%);
-        }
-        .btn-delete {
-          background: #980000;
-          color: #fff;
-          border: none;
-          border-radius: 11px;
-          font-size: 1em;
-          font-weight: 500;
-          padding: 7px 20px;
-          cursor: pointer;
-          transition: background 0.15s;
-        }
-        .btn-delete:hover {
-          background: #f15822;
-        }
-        .btn-cancel {
-          background: #657899;
-          color: #fff;
-          border: none;
-          border-radius: 11px;
-          font-size: 1em;
-          font-weight: 500;
-          padding: 7px 18px;
-          cursor: pointer;
-          transition: background 0.12s;
-        }
-        .btn-cancel:hover {
-          background: #b4c9f1;
-          color: #2a0516;
-        }
-        .pol-modal-bg {
-          position: fixed; left: 0; top: 0; right: 0; bottom: 0;
-          background: #2a0516bb; z-index: 2202;
-          display: flex; align-items: center; justify-content: center;
-        }
-        .pol-modal, .pol-form {
-          background: #fff;
-          border-radius: 19px;
-          box-shadow: 0 12px 38px 0 #2a051629;
-          padding: 36px 23px 18px 23px;
-          min-width: 320px; max-width: 420px; width: 98vw;
-          max-height: 96vh; overflow-y: auto;
-          position: relative;
-        }
-        .pol-form input, .pol-form select, .pol-form textarea {
-          width: 100%; border: 1.5px solid #bfa4c4; border-radius: 9px;
-          padding: 10px 12px; font-size: 1em; background: #fcfafd; margin-bottom: 7px;
-        }
-        .pol-form textarea { min-height: 48px; font-family: inherit; }
-        .pol-close {
-          position: absolute; top: 13px; right: 16px; font-size: 2.2rem; background: none;
-          border: none; color: #c39; cursor: pointer; z-index: 10;
-        }
-        @media (max-width: 700px) {
-          .pol-root { padding: 7vw 1vw; }
-          .pol-grid { grid-template-columns: 1fr; gap: 15px; }
-          .pol-modal, .pol-form { min-width: 0; max-width: 97vw; }
-        }
-      `}</style>
     </div>
   );
 }
