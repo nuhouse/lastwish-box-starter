@@ -74,23 +74,6 @@
   color: #fff;
 }
 
-/* HAMBURGER (Mobile) */
-.sidebar-mobile-toggle {
-  display: none;
-  position: fixed;
-  top: 14px;
-  left: 18px;
-  font-size: 2.2rem;
-  color: #2a0516;
-  background: #fff;
-  border-radius: 7px;
-  z-index: 1100;
-  padding: 1px 10px 2px 8px;
-  cursor: pointer;
-  border: 1px solid #eee;
-  box-shadow: 1px 2px 12px #00000012;
-}
-
 /* --- MAIN CONTENT AREA --- */
 .app-root {
   display: flex;
@@ -129,17 +112,13 @@
     left: 0;
     box-shadow: 6px 0 24px 0 #1c0b1c3c;
   }
-  .sidebar-mobile-toggle {
-    display: block;
-  }
+  /* REMOVED .sidebar-mobile-toggle */
   .content {
     margin-left: 0 !important;
   }
 }
 @media (min-width: 900px) {
-  .sidebar-mobile-toggle {
-    display: none;
-  }
+  /* REMOVED .sidebar-mobile-toggle */
   .content {
     margin-left: 238px;
   }
