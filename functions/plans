@@ -1,0 +1,59 @@
+// src/components/Plans.js
+import React from "react";
+import { functions } from "../firebase"; // Your firebase config
+import { httpsCallable } from "firebase/functions";
+
+const PLANS = [
+  {
+    name: "Basic",
+    description: "Up to 2GB storage",
+    price: "€99/year",
+    priceId: "price_XXXXXX", // Replace with your Stripe price ID
+  },
+  {
+    name: "Pro",
+    description: "Up to 5GB storage",
+    price: "€199/year",
+    priceId: "price_YYYYYY", // Replace with your Stripe price ID
+  },
+];
+
+export default function Plans() {
+  const [loading, setLoading] = React.useState(false);
+
+  const handleBuy = async (priceId) => {
+    setLoading(true);
+    try {
+      const email = ""; // Optionally pre-fill user email if you have it
+      const createCheckoutSession = httpsCallable(functions, "createCheckoutSession");
+      const result = await createCheckoutSession({ priceId, email });
+      window.location = result.data.url; // Redirect to Stripe Checkout
+    } catch (err) {
+      alert("Failed to start checkout: " + err.message);
+    }
+    setLoading(false);
+  };
+
+  return (
+    <div className="plans-root">
+      <h2>Choose a Plan</h2>
+      <div className="plans-list">
+        {PLANS.map(plan => (
+          <div className="plan-card" key={plan.priceId}>
+            <h3>{plan.name}</h3>
+            <div className="plan-desc">{plan.description}</div>
+            <div className="plan-price">{plan.price}</div>
+            <button
+              className="btn-main"
+              onClick={() => handleBuy(plan.priceId)}
+              disabled={loading}
+            >
+              Buy Now
+            </button>
+          </div>
+        ))}
+      </div>
+      {/* Add relevant CSS or link to main.css */}
+    </div>
+  );
+}
