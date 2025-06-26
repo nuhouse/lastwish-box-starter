@@ -1,3 +1,5 @@
+// App.js
+
 import React, { useState, useEffect } from "react";
 import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
 import Sidebar from "./components/Sidebar";
@@ -22,6 +24,13 @@ import Videos from "./components/Videos";
 import ProfilePage from "./components/ProfilePage";
 import './App.css';
 
+// --- Firebase imports ---
+// Adjust the path to your firebase config if needed!
+import { db } from "./firebase"; 
+import { doc, updateDoc, getDoc } from "firebase/firestore";
+
+// ------------------------------------------
+
 function App() {
   const [user, setUser] = useState(null);
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -40,19 +49,36 @@ function App() {
     return <Auth onLogin={setUser} />;
   }
 
-  function handleProfileUpdate(newProfile) {
-  setUser(prev => ({
-    ...prev,
-    ...newProfile,
-    username: prev.username // Don't allow username change!
-  }));
-  // Optionally, add your DB update logic here!
-}
+  // ---- Profile Update Handler ----
+  async function handleProfileUpdate(newProfile) {
+    try {
+      // Save to Firestore: user.uid required!
+      const userRef = doc(db, "users", user.uid);
+      await updateDoc(userRef, {
+        name: newProfile.name,
+        phone: newProfile.phone,
+        address: newProfile.address,
+        email: newProfile.email,
+        // username cannot be changed!
+      });
+      // Fetch latest from Firestore after update
+      const freshUserSnap = await getDoc(userRef);
+      if (freshUserSnap.exists()) {
+        setUser({
+          ...freshUserSnap.data(),
+          uid: user.uid // Ensure uid stays in state
+        });
+      } else {
+        alert("User not found after update!");
+      }
+    } catch (e) {
+      alert("Failed to update profile: " + e.message);
+      throw e;
+    }
+  }
 
-
-  // Logout and Password Reset handlers (customize for your backend)
+  // ---- Logout and Password Reset ----
   function handleLogout() {
-    // Add your logout logic (firebase signOut etc)
     setUser(null);
     window.location.reload();
   }
@@ -64,19 +90,12 @@ function App() {
   return (
     <Router>
       <div className="app-root">
-        {/* Sidebar with user and profile props */}
+        {/* Sidebar */}
         <Sidebar
           open={sidebarOpen}
           onClose={() => setSidebarOpen(false)}
           user={user}
-        
         />
-
-            <Sidebar
-  open={sidebarOpen}
-  onClose={() => setSidebarOpen(false)}
-  user={user}
-/>
 
         {/* Overlay for mobile */}
         {sidebarOpen && (
@@ -162,13 +181,13 @@ function App() {
             <Route path="/contacts" element={<Contacts user={user} />} />
             {/* Profile Page */}
             <Route path="/profile" element={
-  <ProfilePage
-    user={user}
-    onUpdate={handleProfileUpdate}
-    onLogout={handleLogout}
-    // ...other props
-  />
-} />
+              <ProfilePage
+                user={user}
+                onUpdate={handleProfileUpdate}
+                onLogout={handleLogout}
+                onPasswordReset={handlePasswordReset}
+              />
+            } />
             {/* Admin Dashboard (optional) */}
             {/* <Route path="/admin" element={<AdminDashboard user={user} />} /> */}
             <Route path="*" element={<Navigate to="/" />} />
