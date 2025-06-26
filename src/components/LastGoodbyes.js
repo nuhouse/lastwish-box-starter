@@ -167,11 +167,18 @@ export default function LastGoodbyes({ user }) {
     if (message?.mediaUrl) {
       // Delete file from storage
       try {
-        const urlParts = message.mediaUrl.split("/");
-        const fileName = decodeURIComponent(urlParts[urlParts.length - 1].split("?")[0]);
-        await deleteObject(ref(storage, `lastGoodbyes/${user.uid}/${fileName}`));
-      } catch {}
-    }
+  // Parse the file path from the download URL:
+  // e.g. .../o/lastGoodbyes%2F{uid}%2F1750931944807.webm?alt=media...
+  const url = new URL(message.mediaUrl);
+  const pathname = url.pathname; // /v0/b/xxx.appspot.com/o/lastGoodbyes%2Fuid%2Ffilename.webm
+  let fullPath = decodeURIComponent(pathname.split("/o/")[1] || "");
+  // Remove any query params (just in case)
+  if (fullPath.includes("?")) fullPath = fullPath.split("?")[0];
+  await deleteObject(ref(storage, fullPath));
+} catch (err) {
+  // If the file is already gone (404), ignore!
+}
+
     await deleteDoc(refDoc);
     setMessage(null);
     setEditing(true);
