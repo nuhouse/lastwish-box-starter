@@ -13,10 +13,52 @@ body {
 .app-header {
   display: flex;
   align-items: center;
-  padding: 1rem;
+  justify-content: space-between;
+  padding: 1rem 1rem 1rem 1rem;
   background: #2a0516;
   color: white;
+  min-height: 64px;
 }
+.header-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.header-logo {
+  width: 44px;
+  height: 44px;
+  border-radius: 10px;
+}
+.header-title {
+  font-weight: bold;
+  font-size: 1.3rem;
+  letter-spacing: 1px;
+  white-space: nowrap;
+}
+.hamburger-menu {
+  background: none;
+  border: none;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 5px;
+  padding: 7px 10px;
+  cursor: pointer;
+  margin-left: auto;
+  margin-right: 0;
+}
+.hamburger-menu:focus {
+  outline: 2px solid #f15822;
+}
+.bar {
+  display: block;
+  width: 26px;
+  height: 3px;
+  background: #fff;
+  border-radius: 2px;
+  transition: 0.18s;
+}
+
 .sidebar {
   background: #645155;
   min-width: 200px;
@@ -48,23 +90,25 @@ body {
   background: #fff;
   min-height: 100vh;
 }
+
+/* ----------- Responsive header ----------- */
 @media (max-width: 700px) {
-  .sidebar {
-    min-width: 64px;
-    width: 64px;
-    padding: 0.5rem 0;
-    font-size: 0.9rem;
-  }
-  .content {
-    padding: 0.5rem;
-  }
   .app-header {
-    flex-direction: column;
-    align-items: flex-start;
-    padding: 0.5rem;
+    padding: 0.6rem 0.8rem;
+    min-height: 52px;
+    flex-direction: row;
+    align-items: center;
+  }
+  .header-title {
+    font-size: 1.1rem;
+  }
+  .header-logo {
+    width: 36px;
+    height: 36px;
   }
 }
 
+/* ---------- End header section ---------- */
 
 
 /* main.css: Master styles for LastWish Box */
@@ -168,7 +212,6 @@ select {
   margin-bottom: 7px;
 }
 
-
 /* For react-quill rich editor */
 .ewill-quill .ql-toolbar {
   border-radius: 9px 9px 0 0;
@@ -179,13 +222,13 @@ select {
   min-height: 140px;
   font-size: 1.07em;
 }
+
 /* Responsive grid for cards/sections */
 .page-grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   gap: 26px;
 }
-
 @media (max-width: 1100px) {
   .page-grid {
     grid-template-columns: repeat(2, 1fr);
@@ -197,4 +240,3 @@ select {
     gap: 14px;
   }
 }
-
