@@ -11,7 +11,7 @@ export default function ProfilePage({ user, onUpdate, onLogout }) {
   });
   const [saving, setSaving] = useState(false);
 
-  // Always update form if user prop changes!
+  // Update form when user prop changes
   useEffect(() => {
     setProfile({
       username: user.username,
@@ -20,7 +20,7 @@ export default function ProfilePage({ user, onUpdate, onLogout }) {
       address: user.address || "",
       email: user.email || "",
     });
-    setEdit(false); // Reset edit mode after user is refreshed
+    // REMOVE setEdit(false); from here!
   }, [user]);
 
   function handleChange(e) {
@@ -32,7 +32,7 @@ export default function ProfilePage({ user, onUpdate, onLogout }) {
     setSaving(true);
     try {
       await onUpdate(profile);
-      // No need to setEdit(false) here, it's done in useEffect when user is updated
+      setEdit(false); // Set edit to false only after successful save
     } catch (e) {
       alert("Failed to update profile: " + e.message);
     }
