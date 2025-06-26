@@ -88,6 +88,8 @@ body {
   transition: left 0.28s;
   display: flex;
   flex-direction: column;
+  overflow-y: auto;
+  max-height: 100vh;
 }
 .sidebar-brand {
   font-weight: bold;
