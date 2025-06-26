@@ -399,5 +399,11 @@ body, #root, .app-root, .content {
   margin-bottom: 2px;
   width: 100%;
 }
+/* Sidebar profile section safe area for mobile browsers */
+@media (max-width: 700px) {
+  .sidebar-profile {
+    padding-bottom: calc(18px + env(safe-area-inset-bottom, 0px));
+  }
+}
 
 
