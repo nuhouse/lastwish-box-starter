@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
 import Sidebar from "./components/Sidebar";
 import Auth from "./components/Auth";
@@ -21,59 +21,78 @@ import LastGoodbyes from "./components/LastGoodbyes";
 import Videos from "./components/Videos";
 import './App.css';
 
+const Placeholder = ({ title }) => (
+  <div style={{ padding: 32 }}>
+    <h2>{title}</h2>
+    <p>This section will be enabled soon.</p>
+  </div>
+);
+
 function App() {
   const [user, setUser] = useState(null);
   const [sidebarOpen, setSidebarOpen] = useState(false);
+
+  // On route/page change, close mobile sidebar
+  useEffect(() => {
+    const closeSidebarOnResize = () => {
+      if (window.innerWidth >= 900) setSidebarOpen(false);
+    };
+    window.addEventListener("resize", closeSidebarOnResize);
+    return () => window.removeEventListener("resize", closeSidebarOnResize);
+  }, []);
 
   if (!user) {
     return <Auth onLogin={setUser} />;
   }
 
-  // For overlay click or mobile route change
-  const closeSidebar = () => setSidebarOpen(false);
-
   return (
     <Router>
       <div className="app-root">
-        {/* Hamburger only on mobile */}
-        <button
-          className="hamburger-menu"
-          aria-label="Open menu"
-          onClick={() => setSidebarOpen(true)}
-          style={{ display: "none" }} // will be shown via CSS media query
-        >
-          <span className="bar"></span>
-          <span className="bar"></span>
-          <span className="bar"></span>
-        </button>
-
-        {/* Sidebar */}
-        <Sidebar open={sidebarOpen} onClose={closeSidebar} />
+        {/* Sidebar gets open/onClose props for mobile */}
+        <Sidebar open={sidebarOpen} onClose={() => setSidebarOpen(false)} />
 
         {/* Overlay on mobile when sidebar is open */}
         {sidebarOpen && (
           <div
             className="sidebar-overlay"
-            onClick={closeSidebar}
+            onClick={() => setSidebarOpen(false)}
+            tabIndex={0}
+            aria-label="Close menu"
             style={{
               position: "fixed",
               top: 0, left: 0, right: 0, bottom: 0,
-              background: "rgba(30,10,40,0.18)",
-              zIndex: 900,
+              zIndex: 1090,
+              background: "rgba(30,15,25,0.44)"
             }}
           />
         )}
 
         <div className="content">
-          <div className="app-header">
-            <div className="header-left">
-              <img src="/logo-placeholder.png" alt="Logo" className="header-logo" />
-              <span className="header-title">Lastwish Box</span>
+          <div className="app-header" style={{ position: "sticky", top: 0, zIndex: 100 }}>
+            <div className="header-left" style={{ display: "flex", alignItems: "center" }}>
+              <img src="/logo-placeholder.png" alt="Logo" className="header-logo" style={{ width: 40, height: 40, marginRight: 10 }} />
+              <span className="header-title" style={{
+                fontWeight: "bold",
+                fontSize: "1.2rem",
+                letterSpacing: 1,
+                color: "#2a0516",
+                lineHeight: 1
+              }}>
+                Lastwish Box
+              </span>
             </div>
+            {/* Hamburger: only visible on mobile */}
             <button
               className="hamburger-menu"
               aria-label="Open menu"
               onClick={() => setSidebarOpen(true)}
+              style={{
+                marginLeft: "auto",
+                background: "none",
+                border: "none",
+                cursor: "pointer",
+                display: "none"
+              }}
             >
               <span className="bar"></span>
               <span className="bar"></span>
@@ -106,11 +125,38 @@ function App() {
             <Route path="/contacts" element={<Contacts user={user} />} />
             {/* Admin Dashboard (optional) */}
             {/* <Route path="/admin" element={<AdminDashboard user={user} />} /> */}
-            {/* Redirect unknown routes to home */}
             <Route path="*" element={<Navigate to="/" />} />
           </Routes>
         </div>
       </div>
+
+      {/* Hamburger visible only on mobile (CSS handles display) */}
+      <style>{`
+        .hamburger-menu {
+          display: none;
+          flex-direction: column;
+          gap: 4px;
+          margin-left: auto;
+          background: none;
+          border: none;
+          outline: none;
+          cursor: pointer;
+          z-index: 1201;
+        }
+        .hamburger-menu .bar {
+          display: block;
+          width: 27px;
+          height: 3.7px;
+          background: #2a0516;
+          border-radius: 3px;
+          margin: 2px 0;
+        }
+        @media (max-width: 900px) {
+          .hamburger-menu {
+            display: flex;
+          }
+        }
+      `}</style>
     </Router>
   );
 }
