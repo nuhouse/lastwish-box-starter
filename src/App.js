@@ -54,28 +54,47 @@ function App() {
     try {
       // Save to Firestore: user.uid required!
       const userRef = doc(db, "users", user.uid);
+      import { doc, setDoc, getDoc, updateDoc } from "firebase/firestore";
+
+async function handleProfileUpdate(newProfile) {
+  try {
+    const userRef = doc(db, "users", user.uid);
+
+    // Check if doc exists
+    const docSnap = await getDoc(userRef);
+    if (!docSnap.exists()) {
+      // If not, create it with all profile fields!
+      await setDoc(userRef, {
+        username: user.username,
+        name: newProfile.name,
+        phone: newProfile.phone,
+        address: newProfile.address,
+        email: newProfile.email
+      });
+    } else {
+      // If yes, just update the changed fields
       await updateDoc(userRef, {
         name: newProfile.name,
         phone: newProfile.phone,
         address: newProfile.address,
-        email: newProfile.email,
-        // username cannot be changed!
+        email: newProfile.email
       });
-      // Fetch latest from Firestore after update
-      const freshUserSnap = await getDoc(userRef);
-      if (freshUserSnap.exists()) {
-        setUser({
-          ...freshUserSnap.data(),
-          uid: user.uid // Ensure uid stays in state
-        });
-      } else {
-        alert("User not found after update!");
-      }
-    } catch (e) {
-      alert("Failed to update profile: " + e.message);
-      throw e;
     }
+
+    // Fetch and set the updated profile
+    const freshUserSnap = await getDoc(userRef);
+    if (freshUserSnap.exists()) {
+      setUser({
+        ...freshUserSnap.data(),
+        uid: user.uid
+      });
+    }
+  } catch (e) {
+    alert("Failed to update profile: " + e.message);
+    throw e;
   }
+}
+
 
   // ---- Logout and Password Reset ----
   function handleLogout() {
