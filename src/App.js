@@ -1,5 +1,6 @@
 // App.js
 
+import { doc, setDoc, getDoc, updateDoc } from "firebase/firestore";
 import React, { useState, useEffect } from "react";
 import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
 import Sidebar from "./components/Sidebar";
@@ -54,7 +55,7 @@ function App() {
     try {
       // Save to Firestore: user.uid required!
       const userRef = doc(db, "users", user.uid);
-      import { doc, setDoc, getDoc, updateDoc } from "firebase/firestore";
+      
 
 async function handleProfileUpdate(newProfile) {
   try {
