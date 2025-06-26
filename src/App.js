@@ -163,12 +163,13 @@ function App() {
             <Route path="/contacts" element={<Contacts user={user} />} />
             {/* Profile Page */}
             <Route path="/profile" element={
-              <ProfilePage
-                user={user}
-                onLogout={handleLogout}
-                onPasswordReset={handlePasswordReset}
-              />
-            } />
+  <ProfilePage
+    user={user}
+    onUpdate={handleProfileUpdate}
+    onLogout={handleLogout}
+    onPasswordReset={handlePasswordReset}
+  />
+} />
             {/* Admin Dashboard (optional) */}
             {/* <Route path="/admin" element={<AdminDashboard user={user} />} /> */}
             <Route path="*" element={<Navigate to="/" />} />
