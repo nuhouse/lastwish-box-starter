@@ -341,3 +341,29 @@ a {
 a:visited {
   color: inherit;
 }
+
+body, #root, .app-root, .content {
+  max-width: 100vw !important;
+  overflow-x: hidden !important;
+}
+
+/* Make forms and cards fit screen on mobile */
+@media (max-width: 700px) {
+  .card,
+  form,
+  .content {
+    width: 100% !important;
+    max-width: 100vw !important;
+    box-sizing: border-box;
+    padding-left: 8px;
+    padding-right: 8px;
+  }
+  .page-grid {
+    width: 100% !important;
+    max-width: 100vw !important;
+  }
+  input, textarea, select {
+    max-width: 100% !important;
+  }
+}
+
