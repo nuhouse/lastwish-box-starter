@@ -1,0 +1,91 @@
+// src/components/Register.js
+import React, { useState, useEffect } from "react";
+import { functions, auth, db } from "../firebase";
+import { httpsCallable } from "firebase/functions";
+import { createUserWithEmailAndPassword } from "firebase/auth";
+import { doc, setDoc } from "firebase/firestore";
+
+export default function Register() {
+  const [session, setSession] = useState(null);
+  const [form, setForm] = useState({ email: "", password: "" });
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+
+  // Get session_id from URL
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const session_id = params.get("session_id");
+    if (!session_id) {
+      setError("No payment session found. Please select a plan first.");
+      setLoading(false);
+      return;
+    }
+    const getCheckoutSession = httpsCallable(functions, "getCheckoutSession");
+    getCheckoutSession({ sessionId: session_id })
+      .then(res => {
+        if (res.data.payment_status === "paid") {
+          setSession(res.data);
+          setForm(f => ({ ...f, email: res.data.customer_email || "" }));
+        } else {
+          setError("Payment not confirmed. Please try again.");
+        }
+        setLoading(false);
+      })
+      .catch(e => {
+        setError("Error checking payment: " + e.message);
+        setLoading(false);
+      });
+  }, []);
+
+  const handleChange = e => setForm({ ...form, [e.target.name]: e.target.value });
+
+  const handleRegister = async e => {
+    e.preventDefault();
+    setError("");
+    try {
+      // Create Firebase user
+      const userCred = await createUserWithEmailAndPassword(auth, form.email, form.password);
+      // Create Firestore profile
+      await setDoc(doc(db, "users", userCred.user.uid), {
+        email: form.email,
+        stripeCustomerId: session.customer,
+        plan: session.priceId === "price_XXXXXX" ? "basic" : "pro", // Map priceId to plan
+        quota: session.priceId === "price_XXXXXX" ? 2 * 1024 * 1024 * 1024 : 5 * 1024 * 1024 * 1024, // bytes
+        usage: 0,
+      });
+      // Redirect to app or dashboard
+      window.location = "/";
+    } catch (e) {
+      setError("Registration failed: " + e.message);
+    }
+  };
+
+  if (loading) return <div>Loading…</div>;
+  if (error) return <div style={{ color: "red" }}>{error}</div>;
+
+  return (
+    <div className="register-root">
+      <h2>Finish Your Registration</h2>
+      <form onSubmit={handleRegister}>
+        <input
+          type="email"
+          name="email"
+          value={form.email}
+          disabled
+          style={{ background: "#eee" }}
+        />
+        <input
+          type="password"
+          name="password"
+          value={form.password}
+          onChange={handleChange}
+          required
+          placeholder="Password"
+        />
+        <button className="btn-main" type="submit">
+          Create Account
+        </button>
+      </form>
+    </div>
+  );
+}
