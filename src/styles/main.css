@@ -792,4 +792,129 @@ body, #root, .app-root, .content {
   outline: none;
 }
 
+.memorylane-root {
+  max-width: 1150px;
+  margin: 0 auto;
+  padding: 2.5rem 1.5rem 1.2rem 1.5rem;
+}
+.memorylane-add-btn {
+  margin-bottom: 2rem;
+  min-width: 170px;
+}
+.memory-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 32px;
+  margin-bottom: 25px;
+}
+@media (min-width: 900px) {
+  .memory-grid {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 32px;
+  }
+}
+.memorylane-empty {
+  color: #968a9d;
+  font-size: 1.07rem;
+  margin-bottom: 12px;
+  padding-left: 4px;
+}
+.memory-card {
+  display: flex; flex-direction: row; align-items: flex-start;
+  background: #fff;
+  border-radius: 16px;
+  box-shadow: 0 3px 16px 0 #2a051613;
+  padding: 15px 13px 15px 13px;
+  cursor: pointer;
+  border: 1px solid #ece1ec;
+  min-height: 140px;
+  transition: box-shadow 0.13s, border 0.13s, transform 0.13s;
+  position: relative;
+}
+.memory-card:hover { box-shadow: 0 6px 24px 0 #c189b336; transform: translateY(-2px) scale(1.013); border: 1px solid #dab0f1; }
+.memory-thumb { width: 80px; height: 80px; object-fit: cover; border-radius: 10px; margin-right: 17px; border: 1px solid #e6dae6; }
+.memory-info { flex: 1; min-width: 0; }
+.memory-title { font-size: 20px; font-weight: 600; margin-bottom: 6px; color: #2a0516; }
+.memory-date { font-size: 15px; color: #987a91; margin-bottom: 4px; }
+.memory-desc { font-size: 15px; color: #7b6684; margin-bottom: 8px; }
+.memory-tags { margin-bottom: 7px; }
+.memory-tag {
+  display: inline-block;
+  background: #e97c1320;
+  color: #e97c13;
+  font-size: 13px;
+  padding: 2px 8px;
+  border-radius: 7px;
+  margin-right: 6px;
+  margin-bottom: 2px;
+}
+.memory-actions { margin-top: 8px; display: flex; gap: 6px; }
+.btn-main, .btn-cancel, .btn-danger {
+  border: none; border-radius: 7px; padding: 8px 20px;
+  font-weight: 600; cursor: pointer; font-size: 1em;
+  margin-right: 0.3em;
+}
+.btn-main { background: #2a0516; color: #fff; }
+.btn-cancel { background: #ccc; color: #222; }
+.btn-danger { background: #b11a25 !important; color: #fff !important; }
+.memory-form-modal-box {
+  background: #fff;
+  border-radius: 18px;
+  padding: 24px 18px 14px 18px;
+  max-width: 420px;
+  width: 96vw;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 8px 36px 0 #2a051629;
+  margin: 0 auto;
+  max-height: 96vh;
+  overflow-y: auto;
+  box-sizing: border-box;
+}
+.memory-form {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  box-sizing: border-box;
+}
+.memory-form input, .memory-form textarea {
+  width: 100%; 
+  box-sizing: border-box;
+  border: 1.5px solid #bfa4c4; border-radius: 9px;
+  padding: 9px 11px; font-size: 1em; background: #fcfafd; margin-bottom: 0;
+}
+.memory-form textarea { min-height: 56px; }
+.memory-form label { font-weight: 500; margin-bottom: 3px; }
+.memory-form-img-list { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 6px;}
+.memory-form-thumb { width: 48px; height: 48px; object-fit: cover; border-radius: 7px; }
+.memory-form-video { width: 80px; border-radius: 6px; margin-top: 7px; }
+.memory-form-audio { width: 120px; margin-top: 7px; }
+.memory-form-actions { display: flex; gap: 10px; margin-top: 12px; }
+.modal-overlay {
+  position: fixed; left: 0; top: 0; right: 0; bottom: 0;
+  background: #23101882; z-index: 2202;
+  display: flex; align-items: center; justify-content: center;
+}
+.memory-detail-modal {
+  background: #fff;
+  border-radius: 19px;
+  box-shadow: 0 8px 36px 0 #2a051629;
+  padding: 36px 25px 26px 25px;
+  min-width: 310px; max-width: 480px; width: 98vw;
+  max-height: 95vh; overflow-y: auto;
+  position: relative;
+}
+.modal-close {
+  position: absolute; top: 12px; right: 18px; font-size: 2rem; background: none;
+  border: none; color: #c39; cursor: pointer; z-index: 10;
+}
+.memory-detail-date { color: #8c7c91; font-size: 16px; margin-bottom: 7px; }
+.memory-detail-tags { margin-bottom: 13px; }
+.memory-detail-desc { font-size: 16px; margin-bottom: 16px; }
+.memory-detail-img { max-width: 220px; margin: 4px 12px 8px 0; border-radius: 9px; border: 1px solid #eedced; }
+.memory-detail-video { margin-top: 18px; }
+.memory-detail-video video { max-width: 340px; border-radius: 10px; background: #eee; }
+.memory-detail-audio { margin-top: 18px; }
+.memory-detail-audio audio { width: 260px; background: #eee; border-radius: 8px; }
 
