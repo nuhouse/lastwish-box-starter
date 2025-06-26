@@ -275,3 +275,19 @@ select {
     margin-left: 0 !important;
   }
 }
+/* Sidebar base (desktop) */
+.sidebar-root {
+  width: 238px;
+  background: #2a0516;
+  color: #fff;
+  padding-top: 18px;
+  min-height: 100vh;
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: 1100;
+  box-shadow: 2px 0 14px 0 #22091a16;
+  transition: left 0.26s;
+  display: flex;
+  flex-direction: column;
+}
