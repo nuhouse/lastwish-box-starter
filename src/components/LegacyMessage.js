@@ -11,7 +11,7 @@ function defaultForm(user) {
     email: "",
     message: "",
     includeVault: false,
-    delivery: "upon-death", // "immediate", "scheduled", "upon-death"
+    delivery: "upon-death",
     deliverAt: "",
     created: null
   };
@@ -28,7 +28,7 @@ export default function LegacyMessage({ user, masterPw }) {
   const [search, setSearch] = useState("");
   const textareaRef = useRef();
 
-  // Load existing messages
+  // Load messages
   useEffect(() => {
     if (!user) return;
     const q = query(
@@ -69,7 +69,7 @@ export default function LegacyMessage({ user, masterPw }) {
       [name]: type === "checkbox" ? checked : value
     }));
   }
-  // Paste master password in message
+  // Paste master password
   function pasteVaultPassword() {
     if (!masterPw) {
       setCopySuccess("No master password set.");
@@ -132,40 +132,40 @@ export default function LegacyMessage({ user, masterPw }) {
 
   // --- UI ---
   return (
-    <div className="pol-root">
-      <h2>Legacy Message</h2>
-      <div style={{
-        background: "#f1f5fa", color: "#2a0516", borderRadius: 9, padding: 14, marginBottom: 15, fontSize: 15, maxWidth: 530
-      }}>
+    <div className="legacy-root">
+      <h2>Legacy Messages</h2>
+      <div className="legacy-info">
         <b>Leave a final message, instructions, or vault password for your trusted contact(s).</b>
         <br />
         Your message will be delivered on death, a set date, or by admin approval.
       </div>
-      <button className="btn-main" onClick={() => openForm()}>+ New Legacy Message</button>
-      <input
-        type="text"
-        placeholder="Search messages or contacts..."
-        value={search}
-        onChange={e => setSearch(e.target.value)}
-        style={{ minWidth: 180, maxWidth: 290, borderRadius: 7, border: "1.2px solid #bfa4c4", padding: 8, fontSize: "1em", margin: "0 0 16px 17px" }}
-      />
-      <div className="pol-grid">
+      <div className="legacy-actions-row">
+        <button className="btn-main" onClick={() => openForm()}>+ New Legacy Message</button>
+        <input
+          type="text"
+          className="legacy-search"
+          placeholder="Search messages or contacts..."
+          value={search}
+          onChange={e => setSearch(e.target.value)}
+        />
+      </div>
+      <div className="legacy-grid">
         {filtered.length === 0 ? (
-          <div style={{ color: "#a697b8", padding: 28, textAlign: "center" }}>No legacy messages yet.</div>
+          <div className="legacy-empty">No legacy messages yet.</div>
         ) : (
           filtered.map(msg => (
-            <div className="card" key={msg.id} style={{ minHeight: 120, position: "relative" }}>
-              <div style={{ fontWeight: 600, fontSize: 17, marginBottom: 2 }}>{msg.recipient}</div>
-              <div style={{ color: "#657899", fontSize: 14 }}>{msg.email}</div>
-              <div style={{ color: "#b9aac3", fontSize: 13, marginBottom: 4 }}>
+            <div className="legacy-card" key={msg.id}>
+              <div className="legacy-card-recipient">{msg.recipient}</div>
+              <div className="legacy-card-email">{msg.email}</div>
+              <div className="legacy-card-date">
                 {msg.created?.toDate ? msg.created.toDate().toLocaleString() : ""}
               </div>
-              <div style={{ color: "#654e7a", fontSize: 15, marginBottom: 8, whiteSpace: "pre-line" }}>
+              <div className="legacy-card-message">
                 {msg.message.length > 220
                   ? msg.message.slice(0, 220) + "…"
                   : msg.message}
               </div>
-              <div style={{ color: "#8cade1", fontSize: 13, marginBottom: 4 }}>
+              <div className="legacy-card-delivery">
                 Delivery: {
                   msg.delivery === "immediate"
                     ? "Immediately"
@@ -174,19 +174,20 @@ export default function LegacyMessage({ user, masterPw }) {
                       : "Upon death/admin release"
                 }
               </div>
-              <div style={{ display: "flex", gap: 9, alignItems: "center", marginBottom: 2 }}>
-                <button className="btn-main" style={{ fontSize: "0.98em" }} onClick={() => openForm(msg)}>Edit</button>
-                <button className="btn-danger" style={{ fontSize: "0.98em" }} onClick={() => handleDelete(msg.id)}>Delete</button>
+              <div className="legacy-card-actions">
+                <button className="btn-main" onClick={() => openForm(msg)}>Edit</button>
+                <button className="btn-danger" onClick={() => handleDelete(msg.id)}>Delete</button>
               </div>
             </div>
           ))
         )}
       </div>
+
       {/* --- Modal form --- */}
       {showForm && (
-        <div className="pol-modal-bg">
-          <form className="pol-form" onSubmit={handleSubmit}>
-            <h3 style={{ marginBottom: 11, color: "#2a0516" }}>{editingId ? "Edit" : "New"} Legacy Message</h3>
+        <div className="legacy-modal-bg" onClick={closeForm}>
+          <form className="legacy-form" onClick={e => e.stopPropagation()} onSubmit={handleSubmit}>
+            <h3>{editingId ? "Edit" : "New"} Legacy Message</h3>
             <label>Recipient Name</label>
             <input
               type="text"
@@ -210,11 +211,10 @@ export default function LegacyMessage({ user, masterPw }) {
               value={form.message}
               onChange={handleInput}
               rows={5}
-              style={{ marginBottom: 10 }}
               required
               placeholder="Write your instructions, notes, or wishes here…"
             />
-            <div style={{ marginBottom: 12, display: "flex", alignItems: "center", gap: 12 }}>
+            <div className="legacy-checkbox-row">
               <label>
                 <input
                   type="checkbox"
@@ -226,17 +226,16 @@ export default function LegacyMessage({ user, masterPw }) {
               </label>
               <button
                 type="button"
-                className="btn-cancel"
-                style={{ fontSize: "0.96em", padding: "2px 8px" }}
+                className="btn-cancel legacy-btn-paste"
                 onClick={pasteVaultPassword}
               >
                 Paste Vault Password
               </button>
-              {copySuccess && <span style={{ color: "#8cade1", fontSize: 14 }}>{copySuccess}</span>}
+              {copySuccess && <span className="legacy-copy-msg">{copySuccess}</span>}
             </div>
-            <div style={{ marginBottom: 13 }}>
+            <div className="legacy-delivery-row">
               <label>Delivery:</label>
-              <select name="delivery" value={form.delivery} onChange={handleInput} style={{ marginLeft: 8 }}>
+              <select name="delivery" value={form.delivery} onChange={handleInput}>
                 <option value="upon-death">Upon Death/Admin Approval</option>
                 <option value="scheduled">On Specific Date</option>
                 <option value="immediate">Immediately</option>
@@ -247,13 +246,12 @@ export default function LegacyMessage({ user, masterPw }) {
                   name="deliverAt"
                   value={form.deliverAt}
                   onChange={handleInput}
-                  style={{ marginLeft: 10, marginTop: 8 }}
                   required
                 />
               )}
             </div>
-            <div style={{ display: "flex", gap: 9, marginTop: 8 }}>
-              <button className="btn-main" type="submit" disabled={uploading} style={{ flex: 1 }}>
+            <div className="legacy-form-actions">
+              <button className="btn-main" type="submit" disabled={uploading}>
                 {editingId ? "Update" : "Add"}
               </button>
               <button type="button" className="btn-cancel" onClick={closeForm}>Cancel</button>
