@@ -368,4 +368,36 @@ body, #root, .app-root, .content {
     max-width: 100% !important;
   }
 }
+.sidebar-profile {
+  padding: 22px 22px 18px 22px;
+  border-top: 1.5px solid #3a2446;
+  margin-top: auto;
+  background: #29112a;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.sidebar-profile-avatar {
+  width: 56px;
+  height: 56px;
+  background: #8cade1;
+  color: #fff;
+  font-size: 2.1rem;
+  font-weight: 700;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 9px;
+  margin-top: 2px;
+  letter-spacing: 1px;
+}
+
+.sidebar-profile-details {
+  text-align: center;
+  margin-bottom: 2px;
+  width: 100%;
+}
+
 
