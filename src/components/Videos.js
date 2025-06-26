@@ -13,7 +13,12 @@ export default function Videos({ user }) {
   const [form, setForm] = useState({ title: "", description: "", file: null });
   const [uploading, setUploading] = useState(false);
   const [previewUrl, setPreviewUrl] = useState("");
+  const [recording, setRecording] = useState(false);
+  const [mediaStream, setMediaStream] = useState(null);
+  const [mediaRecorder, setMediaRecorder] = useState(null);
+  const [chunks, setChunks] = useState([]);
   const fileInput = useRef();
+  const videoRef = useRef();
 
   // Fetch user's videos
   useEffect(() => {
@@ -37,17 +42,42 @@ export default function Videos({ user }) {
     return () => URL.revokeObjectURL(url);
   }, [form.file]);
 
+  // Set videoRef srcObject for live camera preview
+  useEffect(() => {
+    if (recording && videoRef.current && mediaStream) {
+      videoRef.current.srcObject = mediaStream;
+    }
+    return () => {
+      if (videoRef.current) videoRef.current.srcObject = null;
+    };
+  }, [recording, mediaStream]);
+
   function openForm() {
     setForm({ title: "", description: "", file: null });
     setPreviewUrl("");
     setShowForm(true);
+    setRecording(false);
+    stopMediaTracks();
     if (fileInput.current) fileInput.current.value = "";
   }
   function closeForm() {
     setShowForm(false);
     setForm({ title: "", description: "", file: null });
     setPreviewUrl("");
+    setRecording(false);
+    stopMediaTracks();
     if (fileInput.current) fileInput.current.value = "";
+  }
+  function stopMediaTracks() {
+    if (mediaStream) {
+      mediaStream.getTracks().forEach(track => track.stop());
+      setMediaStream(null);
+    }
+    if (mediaRecorder) {
+      mediaRecorder.stop();
+      setMediaRecorder(null);
+    }
+    setChunks([]);
   }
 
   function handleChange(e) {
@@ -55,6 +85,38 @@ export default function Videos({ user }) {
   }
   function handleFile(e) {
     setForm(f => ({ ...f, file: e.target.files[0] }));
+    setRecording(false);
+    stopMediaTracks();
+  }
+
+  // Start camera and recording
+  async function startRecording() {
+    setChunks([]);
+    setPreviewUrl("");
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+      setMediaStream(stream);
+      const mr = new window.MediaRecorder(stream, { mimeType: "video/webm" });
+      setMediaRecorder(mr);
+      mr.ondataavailable = e => setChunks(chs => [...chs, e.data]);
+      mr.onstop = () => {
+        const blob = new Blob(chunks, { type: "video/webm" });
+        const file = new File([blob], `video_${Date.now()}.webm`, { type: blob.type });
+        setForm(f => ({ ...f, file }));
+        setPreviewUrl(URL.createObjectURL(file));
+        setRecording(false);
+        setMediaStream(null);
+        setMediaRecorder(null);
+        setChunks([]);
+      };
+      mr.start();
+      setRecording(true);
+    } catch (err) {
+      alert("Could not access your camera/mic: " + err.message);
+    }
+  }
+  function stopRecordingBtn() {
+    if (mediaRecorder) mediaRecorder.stop();
   }
 
   async function handleSubmit(e) {
@@ -127,17 +189,44 @@ export default function Videos({ user }) {
             onChange={handleChange}
             rows={2}
           />
-          <input
-            type="file"
-            ref={fileInput}
-            onChange={handleFile}
-            accept="video/*"
-            required
-            style={{ marginBottom: 10 }}
-          />
-          {previewUrl && (
+
+          {!form.file && !recording && (
+            <div style={{ marginBottom: 10 }}>
+              <button className="btn-main" type="button" onClick={startRecording} style={{ marginRight: 10 }}>
+                🎥 Record from Camera
+              </button>
+              <input
+                type="file"
+                ref={fileInput}
+                onChange={handleFile}
+                accept="video/*"
+                style={{ display: "inline", marginLeft: 8 }}
+              />
+            </div>
+          )}
+
+          {recording && mediaStream && (
+            <div style={{ marginBottom: 10 }}>
+              <video
+                ref={videoRef}
+                autoPlay
+                muted
+                style={{ width: "100%", maxWidth: 300, borderRadius: 10, marginBottom: 8, background: "#eaeaf2" }}
+                playsInline
+              />
+              <div>
+                <span style={{ color: "#b11a25", fontWeight: 600 }}>● Recording...</span>
+                <button className="btn-main" type="button" onClick={stopRecordingBtn} style={{ marginLeft: 13 }}>
+                  Stop
+                </button>
+              </div>
+            </div>
+          )}
+
+          {previewUrl && !recording && (
             <video src={previewUrl} controls style={{ width: "100%", maxWidth: 350, borderRadius: 12, marginBottom: 9 }} />
           )}
+
           <div style={{ display: "flex", gap: 12 }}>
             <button className="btn-main" type="submit" disabled={uploading}>Save</button>
             <button className="btn-cancel" type="button" onClick={closeForm}>Cancel</button>
