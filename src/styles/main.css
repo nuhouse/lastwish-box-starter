@@ -150,7 +150,11 @@ body {
 }
 
 /* Modern form inputs */
-input[type="text"], input[type="email"], textarea, select {
+input[type="text"],
+input[type="email"],
+input[type="password"],
+textarea,
+select {
   width: 100%;
   border: 1.5px solid #bfa4c4;
   border-radius: 9px;
@@ -159,6 +163,7 @@ input[type="text"], input[type="email"], textarea, select {
   background: #fcfafd;
   margin-bottom: 7px;
 }
+
 
 /* For react-quill rich editor */
 .ewill-quill .ql-toolbar {
