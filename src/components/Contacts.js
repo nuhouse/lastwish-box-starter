@@ -21,7 +21,6 @@ const RELATIONSHIP_OPTIONS = [
   { value: "Other", label: "Other" }
 ];
 
-// Group contacts into sections
 function groupContacts(contacts) {
   return {
     Family: contacts.filter((c) => c.relationship === "Family"),
@@ -43,7 +42,6 @@ export default function Contacts({ user }) {
   const [editingId, setEditingId] = useState(null);
   const [saving, setSaving] = useState(false);
 
-  // Fetch contacts for current user, sorted by relationship then name
   useEffect(() => {
     if (!user?.uid) return;
     const q = query(
@@ -58,7 +56,6 @@ export default function Contacts({ user }) {
     return unsub;
   }, [user?.uid]);
 
-  // Open modal for add/edit
   function openModal(contact = null) {
     if (contact) {
       setForm({
@@ -82,7 +79,6 @@ export default function Contacts({ user }) {
     setModalOpen(true);
   }
 
-  // Close and reset modal
   function closeModal() {
     setModalOpen(false);
     setForm({
@@ -95,7 +91,6 @@ export default function Contacts({ user }) {
     setEditingId(null);
   }
 
-  // Handle input change
   function onInput(e) {
     setForm((prev) => ({
       ...prev,
@@ -103,19 +98,16 @@ export default function Contacts({ user }) {
     }));
   }
 
-  // Submit new or edited contact
   async function handleSubmit(e) {
     e.preventDefault();
     setSaving(true);
     try {
       if (editingId) {
-        // Update existing
         await updateDoc(doc(db, "contacts", editingId), {
           ...form,
           updated: serverTimestamp(),
         });
       } else {
-        // Add new
         await addDoc(collection(db, "contacts"), {
           ...form,
           uid: user.uid,
@@ -129,7 +121,6 @@ export default function Contacts({ user }) {
     setSaving(false);
   }
 
-  // Delete contact (with confirmation)
   async function handleDelete() {
     if (!editingId) return;
     if (window.confirm("Are you sure you want to delete this contact?")) {
@@ -138,69 +129,29 @@ export default function Contacts({ user }) {
     }
   }
 
-  // Group contacts for display
   const grouped = groupContacts(contacts);
 
   return (
-    <div style={{ maxWidth: 850, margin: "0 auto", padding: 24 }}>
-      <h2 style={{ color: "#2a0516", fontWeight: 700, marginBottom: 30 }}>Contacts</h2>
-      <button
-        style={{
-          background: "#2a0516",
-          color: "#fff",
-          border: "none",
-          borderRadius: 8,
-          padding: "10px 26px",
-          fontWeight: 600,
-          marginBottom: 28,
-          cursor: "pointer",
-          fontSize: 18
-        }}
-        onClick={() => openModal()}
-      >
+    <div className="contacts-root">
+      <h2 className="contacts-title">Contacts</h2>
+      <button className="btn-main contacts-add-btn" onClick={() => openModal()}>
         + Add Contact
       </button>
-      <div style={{
-        display: "grid",
-        gridTemplateColumns: "repeat(auto-fit, minmax(290px,1fr))",
-        gap: 30,
-      }}>
+      <div className="contacts-grid">
         {["Family", "Friends", "Other"].map((section) => (
-          <div key={section}>
-            <div style={{
-              fontWeight: 600,
-              fontSize: 20,
-              color: "#645155",
-              borderBottom: "2px solid #eee",
-              paddingBottom: 8,
-              marginBottom: 12,
-              letterSpacing: 1
-            }}>{section}</div>
+          <div className="contacts-col" key={section}>
+            <div className="contacts-section-title">{section}</div>
             {grouped[section].length === 0 && (
-              <div style={{ color: "#999", fontSize: 15, marginBottom: 10 }}>No contacts yet.</div>
+              <div className="contacts-empty">No contacts yet.</div>
             )}
             {grouped[section].map((contact) => (
-              <div key={contact.id}
-                style={{
-                  background: "#fff",
-                  borderRadius: 12,
-                  boxShadow: "0 1px 6px 0 #0001",
-                  marginBottom: 16,
-                  padding: "18px 16px",
-                  position: "relative",
-                  transition: "box-shadow .18s",
-                  cursor: "pointer"
-                }}
-                onClick={() => openModal(contact)}
-              >
-                <div style={{ fontWeight: 600, fontSize: 17, color: "#2a0516", marginBottom: 3 }}>
-                  {contact.name}
-                </div>
-                <div style={{ color: "#575787", fontSize: 15 }}>{contact.relationship}</div>
-                <div style={{ color: "#555", fontSize: 14 }}>{contact.email}</div>
-                <div style={{ color: "#555", fontSize: 14 }}>{contact.phone}</div>
+              <div className="contacts-card" key={contact.id} onClick={() => openModal(contact)}>
+                <div className="contacts-card-name">{contact.name}</div>
+                <div className="contacts-card-relationship">{contact.relationship}</div>
+                <div className="contacts-card-email">{contact.email}</div>
+                <div className="contacts-card-phone">{contact.phone}</div>
                 {contact.notes && (
-                  <div style={{ color: "#7d6e83", fontSize: 13, marginTop: 6 }}>{contact.notes}</div>
+                  <div className="contacts-card-notes">{contact.notes}</div>
                 )}
               </div>
             ))}
@@ -208,32 +159,13 @@ export default function Contacts({ user }) {
         ))}
       </div>
 
-      {/* MODAL for Add/Edit Contact */}
+      {/* Modal */}
       {modalOpen && (
-        <div style={{
-          position: "fixed",
-          zIndex: 1000,
-          inset: 0,
-          background: "rgba(34,15,30,0.35)",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center"
-        }}>
-          <div style={{
-            background: "#fff",
-            borderRadius: 18,
-            minWidth: 320,
-            maxWidth: 400,
-            width: "96vw",
-            boxShadow: "0 8px 40px 0 #0003",
-            padding: 30,
-            position: "relative"
-          }}>
-            <div style={{ fontWeight: 700, fontSize: 21, color: "#2a0516", marginBottom: 16 }}>
-              {editingId ? "Edit Contact" : "Add Contact"}
-            </div>
+        <div className="contacts-modal-bg" onClick={closeModal}>
+          <div className="contacts-modal-card" onClick={e => e.stopPropagation()}>
+            <div className="contacts-modal-title">{editingId ? "Edit Contact" : "Add Contact"}</div>
             <form onSubmit={handleSubmit} autoComplete="off">
-              <div style={{ display: "flex", flexDirection: "column", gap: 13 }}>
+              <div className="contacts-modal-fields">
                 <input
                   type="text"
                   name="name"
@@ -242,9 +174,7 @@ export default function Contacts({ user }) {
                   onChange={onInput}
                   required
                   minLength={2}
-                  style={{
-                    border: "1px solid #ccc", borderRadius: 6, padding: "10px 11px", fontSize: 16
-                  }}
+                  className="contacts-input"
                 />
                 <input
                   type="tel"
@@ -252,9 +182,7 @@ export default function Contacts({ user }) {
                   value={form.phone}
                   placeholder="Phone"
                   onChange={onInput}
-                  style={{
-                    border: "1px solid #ccc", borderRadius: 6, padding: "10px 11px", fontSize: 16
-                  }}
+                  className="contacts-input"
                 />
                 <input
                   type="email"
@@ -262,18 +190,14 @@ export default function Contacts({ user }) {
                   value={form.email}
                   placeholder="Email"
                   onChange={onInput}
-                  style={{
-                    border: "1px solid #ccc", borderRadius: 6, padding: "10px 11px", fontSize: 16
-                  }}
+                  className="contacts-input"
                 />
                 <select
                   name="relationship"
                   value={form.relationship}
                   onChange={onInput}
-                  style={{
-                    border: "1px solid #ccc", borderRadius: 6, padding: "10px 11px", fontSize: 16
-                  }}
                   required
+                  className="contacts-input"
                 >
                   {RELATIONSHIP_OPTIONS.map(opt =>
                     <option value={opt.value} key={opt.value}>{opt.label}</option>
@@ -285,38 +209,27 @@ export default function Contacts({ user }) {
                   placeholder="Notes"
                   onChange={onInput}
                   rows={2}
-                  style={{
-                    border: "1px solid #ccc", borderRadius: 6, padding: "10px 11px", fontSize: 16, resize: "vertical"
-                  }}
+                  className="contacts-input"
                 />
               </div>
-              <div style={{ display: "flex", justifyContent: "space-between", marginTop: 25 }}>
+              <div className="contacts-modal-actions">
                 <button
                   type="button"
-                  style={{
-                    background: "#ccc", color: "#333", border: "none", borderRadius: 6,
-                    padding: "10px 20px", fontWeight: 500, marginRight: 6, cursor: "pointer"
-                  }}
+                  className="btn-cancel"
                   onClick={closeModal}
                   disabled={saving}
                 >Cancel</button>
                 {editingId && (
                   <button
                     type="button"
-                    style={{
-                      background: "#a62828", color: "#fff", border: "none", borderRadius: 6,
-                      padding: "10px 18px", fontWeight: 500, marginRight: 6, cursor: "pointer"
-                    }}
+                    className="btn-danger"
                     onClick={handleDelete}
                     disabled={saving}
                   >Delete</button>
                 )}
                 <button
                   type="submit"
-                  style={{
-                    background: "#2a0516", color: "#fff", border: "none", borderRadius: 6,
-                    padding: "10px 21px", fontWeight: 600, cursor: "pointer"
-                  }}
+                  className="btn-main"
                   disabled={saving}
                 >{saving ? "Saving..." : "Save"}</button>
               </div>
