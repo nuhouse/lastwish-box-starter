@@ -43,18 +43,21 @@ function App() {
         <Sidebar />
         <div className="content">
           <div className="app-header">
-            <img src="/logo-placeholder.png" alt="Logo" style={{ width: 44, height: 44, marginRight: 10 }} />
-            <span style={{ fontWeight: "bold", fontSize: "1.3rem", letterSpacing: 1 }}>Lastwish Box</span>
-            <span style={{ flex: 1 }} />
-            <button onClick={() => window.location.reload()} style={{
-              background: "#f15822",
-              color: "#fff",
-              border: "none",
-              borderRadius: "5px",
-              padding: "8px 18px",
-              cursor: "pointer"
-            }}>Logout</button>
-          </div>
+  <div className="header-left">
+    <img src="/logo-placeholder.png" alt="Logo" className="header-logo" />
+    <span className="header-title">Lastwish Box</span>
+  </div>
+  <button
+    className="hamburger-menu"
+    aria-label="Open menu"
+    onClick={() => alert("Open sidebar/menu (replace with your function)")}
+  >
+    <span className="bar"></span>
+    <span className="bar"></span>
+    <span className="bar"></span>
+  </button>
+</div>
+
           <Routes>
   <Route path="/" element={<Homepage />} />
   {/* Vaults */}
