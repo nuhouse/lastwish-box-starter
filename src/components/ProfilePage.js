@@ -40,12 +40,6 @@ export default function ProfilePage({ user, onUpdate, onLogout }) {
   }
 
   return (
-    // ... (rest of your form unchanged)
-  );
-}
-
-
-  return (
     <div className="profile-page-wrapper">
       <div className="profile-card">
         <h2>Profile</h2>
