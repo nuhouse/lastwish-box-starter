@@ -17,6 +17,7 @@ import PasswordVault from "./components/PasswordVault";
 import LegacyMessage from "./components/LegacyMessage";
 import AdminDashboard from "./components/AdminDashboard";
 import DigitalPlatforms from "./components/DigitalPlatforms";
+import LastGoodbyes from "./components/LastGoodbyes";
 import './App.css';
 
 
@@ -61,7 +62,7 @@ function App() {
   <Route path="/vaults/password-vault" element={<PasswordVault user={user} />} />
   {/* Messages */}
   <Route path="/messages/personal-messages" element={<PersonalMessages user={user} />} />
-  <Route path="/messages/last-goodbyes" element={<Placeholder title="Last Goodbyes" />} />
+  <Route path="/messages/last-goodbyes" element={<LastGoodbyes user={user} />} />
   <Route path="/messages/videos" element={<Placeholder title="Videos" />} />
   <Route path="/messages/legacy-message" element={<LegacyMessage user={user} />} />
   {/* Legal */}
