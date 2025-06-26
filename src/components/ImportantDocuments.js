@@ -7,7 +7,6 @@ import {
   ref, uploadBytesResumable, getDownloadURL, deleteObject
 } from "firebase/storage";
 
-// Categories & icons (emoji for simplicity, can be replaced with SVG/icons)
 const categories = [
   { label: "Passport", icon: "🛂" },
   { label: "ID", icon: "🆔" },
@@ -38,11 +37,10 @@ export default function ImportantDocuments({ user }) {
   const [editingId, setEditingId] = useState(null);
   const [uploading, setUploading] = useState(false);
   const [preview, setPreview] = useState(null);
-  const [fileUrl, setFileUrl] = useState(""); // For preview
+  const [fileUrl, setFileUrl] = useState("");
   const [search, setSearch] = useState("");
   const fileInput = useRef();
 
-  // Fetch documents for this user
   useEffect(() => {
     if (!user) return;
     const q = query(
@@ -56,7 +54,6 @@ export default function ImportantDocuments({ user }) {
     return unsub;
   }, [user]);
 
-  // File preview for upload
   useEffect(() => {
     if (!form.file) return;
     const url = URL.createObjectURL(form.file);
@@ -103,7 +100,6 @@ export default function ImportantDocuments({ user }) {
     setForm(f => ({ ...f, file: e.target.files[0] }));
   }
 
-  // Upload or update document
   async function handleSubmit(e) {
     e.preventDefault();
     setUploading(true);
@@ -141,12 +137,10 @@ export default function ImportantDocuments({ user }) {
     setUploading(false);
   }
 
-  // Delete document
   async function handleDelete(id, fileUrl) {
     if (!window.confirm("Delete this document?")) return;
     try {
       if (fileUrl) {
-        // Remove from storage
         const segments = fileUrl.split("/");
         const name = decodeURIComponent(segments[segments.length - 1].split("?")[0]);
         await deleteObject(ref(storage, `documents/${user.uid}/${name}`)).catch(() => {});
@@ -157,82 +151,66 @@ export default function ImportantDocuments({ user }) {
     }
   }
 
-  // Category icon
   function categoryIcon(cat) {
     const found = categories.find(c => c.label === cat);
     return found ? found.icon : "📁";
   }
 
-  // File preview logic (show only images, pdfs inline)
   function FilePreview({ fileUrl, fileType }) {
     if (!fileUrl) return null;
     if (["jpg", "jpeg", "png", "gif", "bmp"].includes(fileType)) {
-      return <img src={fileUrl} alt="preview" style={{ maxWidth: 240, maxHeight: 320, borderRadius: 10, margin: "10px 0" }} />;
+      return <img src={fileUrl} alt="preview" className="doc-preview-img" />;
     }
     if (fileType === "pdf") {
       return (
-        <iframe src={fileUrl} style={{ width: 240, height: 320, border: "none", borderRadius: 10, margin: "10px 0" }} title="PDF preview"></iframe>
+        <iframe src={fileUrl} className="doc-preview-pdf" title="PDF preview"></iframe>
       );
     }
     // Fallback: download link
     return <a href={fileUrl} download target="_blank" rel="noopener noreferrer" className="btn-main">Download File</a>;
   }
 
-  // Search/filter logic
   const filteredDocs = docs.filter(d =>
     d.name.toLowerCase().includes(search.toLowerCase()) ||
     d.category.toLowerCase().includes(search.toLowerCase())
   );
 
-  // Main UI
   return (
-    <div className="pol-root">
+    <div className="docs-root">
       <h2>Important Documents</h2>
-      <div style={{ color: "#7a6888", maxWidth: 620, marginBottom: 16 }}>
+      <div className="docs-intro">
         Securely upload and manage essential personal, legal, or financial documents. Only you (and trusted contacts you assign) can access these.
       </div>
-      <div style={{ display: "flex", flexWrap: "wrap", gap: 13, alignItems: "center", marginBottom: 18 }}>
+      <div className="docs-actions-row">
         <button className="btn-main" onClick={() => openForm()}>+ Upload New Document</button>
         <input
           type="text"
+          className="docs-search"
           placeholder="Search by name or category"
           value={search}
           onChange={e => setSearch(e.target.value)}
-          style={{ minWidth: 180, maxWidth: 220, borderRadius: 7, border: "1.2px solid #bfa4c4", padding: 8, fontSize: "1em" }}
         />
       </div>
-      <div className="pol-grid">
+      <div className="docs-grid">
         {filteredDocs.length === 0 ? (
-          <div style={{ color: "#a697b8", padding: 30, textAlign: "center" }}>No documents uploaded yet.</div>
+          <div className="docs-empty">No documents uploaded yet.</div>
         ) : (
           filteredDocs.map(doc =>
-            <div className="card" key={doc.id} onClick={() => setPreview(doc)} style={{ cursor: "pointer", minHeight: 150 }}>
-              <div style={{ fontSize: "2.2em", marginBottom: 4 }}>{categoryIcon(doc.category)}</div>
-              <div style={{ fontWeight: 600, fontSize: 17 }}>{doc.name}</div>
-              <div style={{ color: "#657899", fontSize: 15 }}>{doc.category}</div>
-              <div style={{ color: "#b9aac3", fontSize: 13 }}>
+            <div className="docs-card" key={doc.id} onClick={() => setPreview(doc)}>
+              <div className="docs-icon">{categoryIcon(doc.category)}</div>
+              <div className="docs-title">{doc.name}</div>
+              <div className="docs-category">{doc.category}</div>
+              <div className="docs-date">
                 {doc.dateAdded?.toDate ? doc.dateAdded.toDate().toLocaleString() : ""}
               </div>
-              <div style={{ display: "flex", gap: 7, marginTop: 12 }}>
-                <button
-                  className="btn-main"
-                  style={{ fontSize: "0.97em", padding: "6px 13px" }}
-                  onClick={e => { e.stopPropagation(); setPreview(doc); }}
-                >
+              <div className="docs-card-actions">
+                <button className="btn-main" onClick={e => { e.stopPropagation(); setPreview(doc); }}>
                   View
                 </button>
-                <button
-                  className="btn-cancel"
-                  style={{ fontSize: "0.97em", padding: "6px 13px" }}
-                  onClick={e => { e.stopPropagation(); openForm(doc); }}
-                >
+                <button className="btn-cancel" onClick={e => { e.stopPropagation(); openForm(doc); }}>
                   Edit
                 </button>
-                <button
-                  className="btn-danger"
-                  style={{ fontSize: "0.97em", padding: "6px 13px" }}
-                  onClick={e => { e.stopPropagation(); handleDelete(doc.id, doc.fileUrl); }}
-                >
+                <button className="btn-danger" onClick={e => { e.stopPropagation(); handleDelete(doc.id, doc.fileUrl); }}>
                   Delete
                 </button>
               </div>
@@ -243,11 +221,9 @@ export default function ImportantDocuments({ user }) {
 
       {/* Modal for add/edit */}
       {showForm && (
-        <div className="pol-modal-bg">
-          <form className="pol-form" onSubmit={handleSubmit}>
-            <h3 style={{ marginBottom: 13, color: "#2a0516" }}>
-              {editingId ? "Edit Document" : "Upload New Document"}
-            </h3>
+        <div className="docs-modal-bg">
+          <form className="docs-form" onSubmit={handleSubmit}>
+            <h3>{editingId ? "Edit Document" : "Upload New Document"}</h3>
             <label>Document Name</label>
             <input
               type="text"
@@ -270,7 +246,6 @@ export default function ImportantDocuments({ user }) {
               onChange={handleInput}
               placeholder="Describe this document..."
               rows={2}
-              style={{ marginBottom: 11 }}
             />
             <label>Upload File {editingId && "(leave blank to keep current file)"}</label>
             <input
@@ -279,16 +254,14 @@ export default function ImportantDocuments({ user }) {
               onChange={handleFile}
               accept=".pdf,.jpg,.jpeg,.png,.gif,.bmp,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt"
               required={!editingId}
-              style={{ marginBottom: 9 }}
             />
-            {/* Show preview */}
             {(fileUrl || form.fileUrl) && (
               <div style={{ marginBottom: 10 }}>
                 <FilePreview fileUrl={fileUrl || form.fileUrl} fileType={form.fileType || (form.file && form.file.name.split('.').pop().toLowerCase())} />
               </div>
             )}
-            <div style={{ display: "flex", gap: 9, marginTop: 9 }}>
-              <button className="btn-main" type="submit" disabled={uploading} style={{ flex: 1 }}>
+            <div className="docs-form-actions">
+              <button className="btn-main" type="submit" disabled={uploading}>
                 {editingId ? "Update" : "Add"}
               </button>
               <button type="button" className="btn-cancel" onClick={closeForm}>Cancel</button>
@@ -299,12 +272,12 @@ export default function ImportantDocuments({ user }) {
 
       {/* Preview Modal */}
       {preview && (
-        <div className="pol-modal-bg" onClick={() => setPreview(null)}>
-          <div className="pol-modal" onClick={e => e.stopPropagation()}>
-            <button className="pol-close" onClick={() => setPreview(null)}>&times;</button>
-            <h3 style={{ marginBottom: 9, color: "#2a0516" }}>{preview.name}</h3>
-            <div style={{ color: "#7c6e8a", marginBottom: 8, fontSize: 15 }}>{preview.category} • {preview.dateAdded?.toDate ? preview.dateAdded.toDate().toLocaleDateString() : ""}</div>
-            <div style={{ marginBottom: 12, fontWeight: 500 }}>{preview.description}</div>
+        <div className="docs-modal-bg" onClick={() => setPreview(null)}>
+          <div className="docs-modal" onClick={e => e.stopPropagation()}>
+            <button className="docs-close" onClick={() => setPreview(null)}>&times;</button>
+            <h3>{preview.name}</h3>
+            <div className="docs-meta">{preview.category} • {preview.dateAdded?.toDate ? preview.dateAdded.toDate().toLocaleDateString() : ""}</div>
+            <div className="docs-desc">{preview.description}</div>
             <FilePreview fileUrl={preview.fileUrl} fileType={preview.fileType} />
             <div style={{ marginTop: 12 }}>
               <a href={preview.fileUrl} download target="_blank" rel="noopener noreferrer" className="btn-main">Download</a>
