@@ -1,17 +1,43 @@
 import React, { useState } from "react";
 import { auth, provider } from "../firebase";
 import { signInWithEmailAndPassword, createUserWithEmailAndPassword, signInWithPopup } from "firebase/auth";
+import { doc, getDoc, setDoc } from "firebase/firestore";
+import { db } from "../firebase"; // adjust path if needed
 
 export default function Auth({ onLogin }) {
-  const [isRegister, setIsRegister] = useState(false);
-  const [email, setEmail] = useState("");
-  const [pw, setPw] = useState("");
-  const [err, setErr] = useState("");
+  // ...rest of your code...
+
+  const hydrateAndLogin = async (authUser) => {
+    // Try get Firestore profile for this user
+    const userRef = doc(db, "users", authUser.uid);
+    let userProfile = {};
+    const snap = await getDoc(userRef);
+    if (!snap.exists()) {
+      // If first login, create minimal profile
+      await setDoc(userRef, {
+        username: authUser.email,
+        email: authUser.email,
+        name: "",
+        phone: "",
+        address: ""
+      });
+      userProfile = { username: authUser.email, email: authUser.email, name: "", phone: "", address: "" };
+    } else {
+      userProfile = snap.data();
+    }
+    // Pass combined object to parent!
+    onLogin({
+      ...userProfile,
+      uid: authUser.uid,
+      email: authUser.email,
+      username: authUser.email // for consistency
+    });
+  };
 
   const signInWithGoogle = async () => {
     try {
       const res = await signInWithPopup(auth, provider);
-      onLogin(res.user);
+      await hydrateAndLogin(res.user);
     } catch (e) {
       setErr(e.message);
     }
@@ -21,13 +47,13 @@ export default function Auth({ onLogin }) {
     e.preventDefault();
     setErr("");
     try {
+      let res;
       if (isRegister) {
-        const res = await createUserWithEmailAndPassword(auth, email, pw);
-        onLogin(res.user);
+        res = await createUserWithEmailAndPassword(auth, email, pw);
       } else {
-        const res = await signInWithEmailAndPassword(auth, email, pw);
-        onLogin(res.user);
+        res = await signInWithEmailAndPassword(auth, email, pw);
       }
+      await hydrateAndLogin(res.user);
     } catch (e) {
       setErr(e.message);
     }
