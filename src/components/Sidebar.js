@@ -1,7 +1,6 @@
 import React, { useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 
-// Example menu, update as needed
 const menu = [
   { label: "Home", path: "/", icon: "🏠" },
   {
@@ -41,8 +40,11 @@ export default function Sidebar({ open = false, onClose, user }) {
   const location = useLocation();
   const navigate = useNavigate();
   const [openMenus, setOpenMenus] = useState({});
+  const [showPwModal, setShowPwModal] = useState(false);
+  const [pwLoading, setPwLoading] = useState(false);
+  const [pwSent, setPwSent] = useState(false);
 
-  // Only one parent open at a time (accordion)
+  // Accordion: only one parent at a time
   function toggleMenu(index) {
     setOpenMenus(prev => {
       const next = {};
@@ -51,7 +53,6 @@ export default function Sidebar({ open = false, onClose, user }) {
     });
   }
 
-  // Helper for parent highlight
   function isChildActive(children) {
     return children.some(child => location.pathname === child.path);
   }
@@ -60,27 +61,21 @@ export default function Sidebar({ open = false, onClose, user }) {
     if (onClose) onClose();
   }
 
-  // --- Profile Section (bottom) ---
-  const userInitial = user?.name
-    ? user.name[0].toUpperCase()
-    : (user?.username ? user.username[0].toUpperCase() : "U");
+  const userInitial = user?.username
+    ? user.username[0].toUpperCase()
+    : "U";
 
   function handleProfile() {
     navigate("/profile");
     if (onClose) onClose();
   }
 
-  // Change Password Modal (inline for demo)
-  const [showPwModal, setShowPwModal] = useState(false);
-  const [pwLoading, setPwLoading] = useState(false);
-  const [pwEmail, setPwEmail] = useState(user?.email || "");
-  const [pwSent, setPwSent] = useState(false);
   async function sendPwReset(e) {
     e.preventDefault();
     setPwLoading(true);
     try {
-      // Insert your password reset logic here (Firebase, API, etc)
-      await new Promise(r => setTimeout(r, 1200)); // Fake delay
+      // Replace with your password reset function (e.g., Firebase sendPasswordResetEmail)
+      await new Promise(r => setTimeout(r, 1200)); // fake delay
       setPwSent(true);
     } catch (err) {
       alert("Failed to send password reset link.");
@@ -89,13 +84,11 @@ export default function Sidebar({ open = false, onClose, user }) {
   }
 
   function handleLogout() {
-    // If you use an auth provider, sign out here
     window.location.reload();
   }
 
   return (
     <>
-      {/* Sidebar */}
       <aside className={`sidebar-root${open ? " sidebar-open" : ""}`}>
         <div className="sidebar-brand">Lastwish Box</div>
         <nav>
@@ -157,8 +150,7 @@ export default function Sidebar({ open = false, onClose, user }) {
             ))}
           </ul>
         </nav>
-
-        {/* Profile Section at bottom */}
+        {/* --- Profile Section --- */}
         <div className="sidebar-profile-section">
           <div className="profile-avatar" onClick={handleProfile}>
             {userInitial}
@@ -187,8 +179,7 @@ export default function Sidebar({ open = false, onClose, user }) {
           </button>
         </div>
       </aside>
-
-      {/* Password reset modal */}
+      {/* --- Password reset modal --- */}
       {showPwModal && (
         <div className="modal-bg" onClick={() => setShowPwModal(false)}>
           <div className="modal-card" onClick={e => e.stopPropagation()}>
@@ -196,7 +187,7 @@ export default function Sidebar({ open = false, onClose, user }) {
             {pwSent ? (
               <div>
                 <div style={{ color: "#2a0516", fontWeight: 500, margin: "22px 0 24px" }}>
-                  A password reset email has been sent to:<br /><span style={{ color: "#8cade1" }}>{pwEmail}</span>
+                  A password reset email has been sent to:<br /><span style={{ color: "#8cade1" }}>{user.username}</span>
                 </div>
                 <button className="btn-main" style={{ width: 100 }} onClick={() => setShowPwModal(false)}>Close</button>
               </div>
@@ -205,9 +196,8 @@ export default function Sidebar({ open = false, onClose, user }) {
                 <label style={{ fontWeight: 500, marginBottom: 5, display: "block" }}>Email</label>
                 <input
                   type="email"
-                  value={pwEmail}
-                  onChange={e => setPwEmail(e.target.value)}
-                  required
+                  value={user.username}
+                  disabled
                   style={{ marginBottom: 15, width: "100%" }}
                 />
                 <button className="btn-main" style={{ width: "100%" }} disabled={pwLoading}>
@@ -218,7 +208,7 @@ export default function Sidebar({ open = false, onClose, user }) {
           </div>
         </div>
       )}
-      {/* CSS for the profile/side/footer */}
+      {/* --- Styles for profile section and modal --- */}
       <style>{`
         .sidebar-profile-section {
           margin-top: auto;
